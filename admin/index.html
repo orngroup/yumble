@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1C2430">
+<title>Yumble — Admin</title>
+<link rel="icon" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#D6155E;--ink:#1C2430;--slate:#5A6472;--mist:#F4F6F8;--line:#E4E8ED;--teal:#12B5A5;--coral:#F26D6D}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--mist)}
+.script{font-family:'Pacifico',cursive}
+.btn{border:0;border-radius:12px;font:inherit;font-weight:700;font-size:14px;padding:11px 18px;cursor:pointer}
+.btn-red{background:var(--red);color:#fff}.btn-line{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.btn-teal{background:var(--teal);color:#fff}.btn-danger{background:#fff;border:1.5px solid var(--coral);color:var(--coral)}
+
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#1C2430,#2b3546)}
+.login-card{background:#fff;border-radius:24px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.login-card .script{font-size:32px;color:var(--red);text-align:center}
+.login-card .badge{text-align:center;font-size:12px;font-weight:800;letter-spacing:1px;color:var(--slate);margin-bottom:24px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:6px}
+.field input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px;font:inherit;font-size:15px}
+
+#dash{display:none}
+.topbar{background:var(--ink);color:#fff;height:60px;display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
+.topbar .script{font-size:22px}
+.topbar .tag{background:rgba(255,255,255,.15);font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;letter-spacing:.5px}
+.topbar .sp{flex:1}
+.layout{display:grid;grid-template-columns:210px 1fr;max-width:1280px;margin:0 auto}
+.side{padding:22px 14px;border-right:1px solid var(--line);min-height:calc(100vh - 60px);background:#fff}
+.side button{display:block;width:100%;text-align:left;background:none;border:0;font:inherit;font-weight:600;font-size:14.5px;color:var(--slate);padding:11px 14px;border-radius:11px;cursor:pointer;margin-bottom:3px}
+.side button.on{background:var(--ink);color:#fff}
+.main{padding:26px}
+.page{display:none}.page.on{display:block}
+h1{font-size:24px;font-weight:800;margin-bottom:4px}
+.sub{color:var(--slate);margin-bottom:22px;font-size:15px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.stat .v{font-size:28px;font-weight:800}.stat .l{font-size:13px;color:var(--slate);margin-top:2px}
+.stat.red .v{color:var(--red)}.stat.teal .v{color:var(--teal)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:0;overflow:hidden;margin-bottom:18px}
+.card-pad{padding:20px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--slate);padding:11px 14px;border-bottom:2px solid var(--line)}
+td{padding:12px 14px;border-bottom:1px solid var(--mist);font-size:14px}
+.pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.pill.ok{background:#DFF6F3;color:#0C8073}.pill.new{background:#FFECEC;color:var(--red)}.pill.pend{background:#FFF6ED;color:#9A6A1E}
+.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;opacity:0;transition:.3s;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.demo-note{background:#FFF6ED;border:1px solid #F5E4CE;border-radius:12px;padding:12px 15px;font-size:13px;color:#9A6A1E;margin-bottom:20px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.side{display:flex;overflow-x:auto;min-height:auto;border-right:0;border-bottom:1px solid var(--line)}.side button{white-space:nowrap}.stat-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-card">
+    <div class="script">Yumble</div>
+    <div class="badge">ADMIN CONSOLE</div>
+    <div class="field"><label>Admin email</label><input value="admin@yumble.app"></div>
+    <div class="field"><label>Password</label><input type="password" value="demo1234"></div>
+    <button class="btn btn-red" style="width:100%" onclick="login()">Sign in</button>
+    <p style="text-align:center;font-size:11px;color:#9AA3B0;margin-top:20px">Demo — protected by Firebase Auth + admin role in the live app.</p>
+  </div>
+</div>
+
+<div id="dash">
+  <div class="topbar">
+    <span class="script">Yumble</span><span class="tag">ADMIN</span>
+    <span class="sp"></span>
+    <button class="btn btn-line" onclick="logout()">Log out</button>
+  </div>
+  <div class="layout">
+    <div class="side">
+      <button class="on" onclick="nav('overview',this)">📊 Overview</button>
+      <button onclick="nav('users',this)">👥 Users</button>
+      <button onclick="nav('venues',this)">🍽️ Venues</button>
+      <button onclick="nav('bookings',this)">📅 Bookings</button>
+      <button onclick="nav('recs',this)">➕ Recommendations</button>
+      <button onclick="nav('reports',this)">🚩 Reports</button>
+    </div>
+    <div class="main">
+      <div class="demo-note">🔧 Demo admin with sample data. In the live app this reads/writes Firebase and is restricted to admin accounts.</div>
+
+      <div class="page on" id="p-overview">
+        <h1>Overview</h1><p class="sub">Yumble at a glance.</p>
+        <div class="stat-grid">
+          <div class="stat red"><div class="v">2,418</div><div class="l">Total users</div></div>
+          <div class="stat teal"><div class="v">312</div><div class="l">Matches this week</div></div>
+          <div class="stat"><div class="v">96</div><div class="l">Bookings this week</div></div>
+          <div class="stat red"><div class="v">24</div><div class="l">Partner venues</div></div>
+        </div>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat"><div class="v">£1,842</div><div class="l">Fees collected (mo)</div></div>
+          <div class="stat"><div class="v">1,204</div><div class="l">Founding members</div></div>
+          <div class="stat teal"><div class="v">4.7★</div><div class="l">Avg venue rating</div></div>
+        </div>
+      </div>
+
+      <div class="page" id="p-users">
+        <h1>Users</h1><p class="sub">Manage member accounts.</p>
+        <div class="card-pad card" style="border-left:4px solid var(--red)">
+          <h3 style="font-weight:800;margin-bottom:4px">⏳ Verification queue · 2 waiting</h3>
+          <p style="color:var(--slate);font-size:14px;margin-bottom:14px">New sign-ups awaiting ID approval. Review selfie vs ID, then approve or reject.</p>
+          <table><thead><tr><th>Applicant</th><th>Age</th><th>Selfie</th><th>ID</th><th>Action</th></tr></thead>
+          <tbody id="verifyRows"></tbody></table>
+        </div>
+        <div class="card"><table>
+          <thead><tr><th>Member</th><th>Joined</th><th>Status</th><th>Matches</th><th></th></tr></thead>
+          <tbody id="userRows"></tbody>
+        </table></div>
+      </div>
+
+      <div class="page" id="p-venues">
+        <h1>Venues</h1><p class="sub">Partner restaurants on the platform.</p>
+        <div class="card"><table>
+          <thead><tr><th>Venue</th><th>Area</th><th>Bookings</th><th>Status</th><th></th></tr></thead>
+          <tbody id="venueRows"></tbody>
+        </table></div>
+      </div>
+
+      <div class="page" id="p-bookings">
+        <h1>Bookings</h1><p class="sub">All table bookings across the platform.</p>
+        <div class="card"><table>
+          <thead><tr><th>Member</th><th>Venue</th><th>Date</th><th>Fee</th><th>Status</th></tr></thead>
+          <tbody id="allBookingRows"></tbody>
+        </table></div>
+      </div>
+
+      <div class="page" id="p-recs">
+        <h1>Recommendations</h1><p class="sub">Restaurants suggested by members — reach out to onboard them.</p>
+        <div class="card"><table>
+          <thead><tr><th>Suggested venue</th><th>Area</th><th>By</th><th></th></tr></thead>
+          <tbody id="recRows"></tbody>
+        </table></div>
+      </div>
+
+      <div class="page" id="p-reports">
+        <h1>Reports</h1><p class="sub">Safety reports needing review.</p>
+        <div class="card-pad card"><p style="color:var(--slate)">No open reports. 🎉 Reported users appear here for review with block / warn / ban actions.</p></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function login(){document.getElementById('login').style.display='none';document.getElementById('dash').style.display='block';renderAll();}
+function logout(){document.getElementById('dash').style.display='none';document.getElementById('login').style.display='flex';}
+function nav(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+id).classList.add('on');document.querySelectorAll('.side button').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+const users=[
+  {n:"Alex Morgan",j:"2 Aug 2026",s:"ok",m:12},
+  {n:"Priya Patel",j:"28 Jul 2026",s:"ok",m:34},
+  {n:"Sofia Rossi",j:"25 Jul 2026",s:"pend",m:8},
+  {n:"Leila Haddad",j:"20 Jul 2026",s:"ok",m:21},
+  {n:"Chloé Martin",j:"18 Jul 2026",s:"ok",m:17}
+];
+const venues=[
+  {n:"Casablanca Lounge",a:"Mayfair",b:38,s:"ok"},
+  {n:"Heart Cup Café",a:"Soho",b:29,s:"ok"},
+  {n:"Portman Rooftop",a:"Marylebone",b:14,s:"ok"},
+  {n:"Dishoom Table",a:"Covent Garden",b:41,s:"ok"},
+  {n:"Nonna's Kitchen",a:"Islington",b:0,s:"pend"}
+];
+const allBookings=[
+  {u:"Alex Morgan",v:"Heart Cup Café",d:"9 Aug",fee:"£2",s:"ok"},
+  {u:"Priya Patel",v:"Casablanca Lounge",d:"8 Aug",fee:"£2",s:"ok"},
+  {u:"Sofia Rossi",v:"Portman Rooftop",d:"14 Aug",fee:"£2",s:"pend"},
+  {u:"Leila Haddad",v:"Dishoom Table",d:"20 Aug",fee:"£2",s:"ok"}
+];
+const recs=[
+  {v:"Nonna's Kitchen",a:"Islington N1",by:"Alex M."},
+  {v:"The Sea Shack",a:"Brighton",by:"Priya P."},
+  {v:"Embers BBQ",a:"Shoreditch E1",by:"Leila H."}
+];
+function renderAll(){
+  const vq=[{n:"Alex Morgan",age:29},{n:"Jordan Lee",age:34}];
+  document.getElementById('verifyRows').innerHTML=vq.map((v,i)=>`<tr id="vq${i}"><td><b>${v.n}</b></td><td>${v.age}</td><td>🤳 <a href="#" onclick="return false" style="color:var(--red)">View</a></td><td>🪪 <a href="#" onclick="return false" style="color:var(--red)">View</a></td><td><button class="btn btn-teal" style="padding:6px 12px;font-size:13px" onclick="approve(${i},'${v.n}')">✓ Approve</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:13px" onclick="reject(${i})">Reject</button></td></tr>`).join("");
+  document.getElementById('userRows').innerHTML=users.map(u=>`<tr><td><b>${u.n}</b></td><td>${u.j}</td><td><span class="pill ${u.s}">${u.s==='pend'?'Pending':'Active'}</span></td><td>${u.m}</td><td><button class="btn btn-danger" style="padding:6px 12px;font-size:13px" onclick="toast('Suspend user (demo)')">Suspend</button></td></tr>`).join("");
+  document.getElementById('venueRows').innerHTML=venues.map(v=>`<tr><td><b>${v.n}</b></td><td>${v.a}</td><td>${v.b}</td><td><span class="pill ${v.s}">${v.s==='pend'?'Pending':'Live'}</span></td><td><button class="btn btn-line" style="padding:6px 12px;font-size:13px" onclick="toast('${v.s==='pend'?'Approve':'View'} venue (demo)')">${v.s==='pend'?'Approve':'View'}</button></td></tr>`).join("");
+  document.getElementById('allBookingRows').innerHTML=allBookings.map(b=>`<tr><td>${b.u}</td><td><b>${b.v}</b></td><td>${b.d}</td><td>${b.fee}</td><td><span class="pill ${b.s}">${b.s==='pend'?'Pending':'Confirmed'}</span></td></tr>`).join("");
+  document.getElementById('recRows').innerHTML=recs.map(r=>`<tr><td><b>${r.v}</b></td><td>${r.a}</td><td>${r.by}</td><td><button class="btn btn-teal" style="padding:6px 12px;font-size:13px" onclick="toast('Invite sent (demo)')">Invite</button></td></tr>`).join("");
+}
+function approve(i,n){const row=document.getElementById('vq'+i);if(row)row.remove();toast('✓ '+n+' approved — they can now use Foodies');}
+function reject(i){const row=document.getElementById('vq'+i);if(row)row.remove();toast('Applicant rejected');}
+

@@ -1,0 +1,143 @@
+<!-- ============================================================
+     FIND FOODIES — Firebase integration (v9 modular)
+     Included as a <script type="module"> in index.html.
+     Fill in YOUR config below, then set DEMO_MODE=false.
+     ============================================================ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut,
+  GoogleAuthProvider, FacebookAuthProvider, OAuthProvider,
+  signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+  query, where, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ===== STEP 1: paste your Firebase web config (Console → Project settings → Your apps) ===== */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "yumble-app.firebaseapp.com",
+  projectId: "yumble-app",
+  storageBucket: "yumble-app.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+/* ===== STEP 2: set to false once auth + Firestore are enabled and seeded ===== */
+const DEMO_MODE = true;
+
+/* ===== STEP 3 (optional): Google Places for live search ===== */
+const GOOGLE_PLACES_KEY = "YOUR_PLACES_KEY";
+const USE_PLACES = false;
+
+let app, auth, db;
+if (!DEMO_MODE) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+}
+
+// Haversine for distance filtering (client-side)
+function miles(a, b) {
+  const R = 3959, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+  const la1 = a.lat * Math.PI / 180, la2 = b.lat * Math.PI / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(x));
+}
+
+window.FF = {
+  demo: DEMO_MODE,
+  user: null,
+
+  /* ---------- AUTH ---------- */
+  async signIn(providerName) {
+    if (DEMO_MODE) { this.user = { uid: "demo", name: "Alex", email: "alex@example.com" }; return this.user; }
+    let provider;
+    if (providerName === "google") provider = new GoogleAuthProvider();
+    else if (providerName === "facebook") provider = new FacebookAuthProvider();
+    else if (providerName === "apple") provider = new OAuthProvider("apple.com");
+    else throw new Error("Unknown provider");
+    const res = await signInWithPopup(auth, provider);
+    return res.user;
+  },
+  async signInEmail(email, pw, isNew) {
+    if (DEMO_MODE) { this.user = { uid: "demo", name: email.split("@")[0], email }; return this.user; }
+    const fn = isNew ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
+    const res = await fn(auth, email, pw);
+    return res.user;
+  },
+  async signOut() { if (DEMO_MODE) { this.user = null; return; } return signOut(auth); },
+  onAuth(cb) {
+    if (DEMO_MODE) { cb(this.user); return; }
+    onAuthStateChanged(auth, cb);
+  },
+
+  /* ---------- PROFILE ---------- */
+  async saveProfile(data) {
+    if (DEMO_MODE) return true;
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, "users", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    return true;
+  },
+  async getProfile(uid) {
+    if (DEMO_MODE) return null;
+    const snap = await getDoc(doc(db, "users", uid || auth.currentUser.uid));
+    return snap.exists() ? snap.data() : null;
+  },
+
+  /* ---------- VENUES (Firestore) ---------- */
+  async getVenues({ lat, lng, radiusMiles = 5, max = 60 } = {}) {
+    if (DEMO_MODE || !db) return (window.LONDON_VENUES || []);
+    // Firestore has no geo-radius natively; fetch a working set and filter client-side.
+    // For production scale, use a geohash library (geofire-common). Here: fetch by area bucket.
+    const snap = await getDocs(query(collection(db, "venues"), limit(400)));
+    let list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    if (lat && lng) {
+      list = list.map(v => ({ ...v, d: miles({ lat, lng }, { lat: v.lat, lng: v.lng }) }))
+                 .filter(v => v.d <= radiusMiles).sort((a, b) => a.d - b.d);
+    }
+    return list.slice(0, max);
+  },
+
+  /* ---------- PLACES (live search) ---------- */
+  async searchPlaces(queryText, lat, lng) {
+    if (!USE_PLACES) {
+      // fall back to filtering seed venues by text
+      const all = window.LONDON_VENUES || [];
+      const q = queryText.toLowerCase();
+      return all.filter(v => v.name.toLowerCase().includes(q) || v.area.toLowerCase().includes(q) ||
+        v.cuisines.some(c => c.toLowerCase().includes(q))).slice(0, 40);
+    }
+    // LIVE Places Text Search (requires a small proxy or the Places JS library).
+    // See SETUP-GUIDE: you call Places from a Cloud Function to keep the key secret.
+    const url = `/api/places?q=${encodeURIComponent(queryText)}&lat=${lat}&lng=${lng}`;
+    const r = await fetch(url); return (await r.json()).results || [];
+  },
+
+  /* ---------- LIKES / MATCHES / MESSAGES / BOOKINGS ---------- */
+  async recordLike(toUid) {
+    if (DEMO_MODE) return true;
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, "likes", `${uid}_${toUid}`), { from: uid, to: toUid, at: serverTimestamp() });
+    // match if reciprocal exists
+    const recip = await getDoc(doc(db, "likes", `${toUid}_${uid}`));
+    if (recip.exists()) { await setDoc(doc(db, "matches", [uid, toUid].sort().join("_")), { users: [uid, toUid].sort(), at: serverTimestamp() }); return { matched: true }; }
+    return { matched: false };
+  },
+  async sendMessage(matchId, text) {
+    if (DEMO_MODE) return true;
+    await addDoc(collection(db, "messages", matchId, "items"),
+      { from: auth.currentUser.uid, text, at: serverTimestamp() });
+  },
+  async createBooking(b) {
+    if (DEMO_MODE) return true;
+    await addDoc(collection(db, "bookings"), { ...b, uid: auth.currentUser.uid, at: serverTimestamp() });
+  },
+  async recommendVenue(v) {
+    if (DEMO_MODE) return true;
+    await addDoc(collection(db, "recommendations"), { ...v, by: auth.currentUser?.uid || "anon", at: serverTimestamp() });
+  }
+};
+</script>

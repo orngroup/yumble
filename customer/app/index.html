@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#D6155E">
+<meta name="description" content="Foodies — Love Food. Love Life. Meet people who share your taste.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Yumble — Love Food. Love Life</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#D6155E;
+  --red-deep:#A50E48;
+  --red-dark:#7A0A34;
+  --coral:#F26D6D;
+  --coral-soft:#F79A9A;
+  --teal:#12B5A5;
+  --ink:#1C2430;
+  --slate:#5A6472;
+  --mist:#EEF1F4;
+  --line:#E4E8ED;
+  --white:#ffffff;
+  --gold:#D9A441;
+  --shadow:0 10px 30px rgba(20,20,30,.14);
+  --shadow-lg:0 24px 60px rgba(20,20,30,.28);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:#2a2d33;
+  color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.script{font-family:'Pacifico',cursive;font-weight:400}
+
+/* ---------- Phone frame ---------- */
+#device{
+  position:relative;
+  width:min(430px,100vw);
+  height:min(932px,100vh);
+  background:var(--white);
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+@media(min-width:460px) and (min-height:960px){
+  #device{border-radius:44px;border:12px solid #0d0d10;height:900px}
+}
+#screens{position:absolute;inset:0}
+.screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateX(24px);
+  transition:opacity .32s ease,transform .32s ease,visibility .32s;
+  background:var(--white);
+}
+.screen.active{opacity:1;visibility:visible;transform:none;z-index:2}
+.screen.red-bg{background:var(--red)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* ---------- Shared UI ---------- */
+.pad{padding:22px}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.brandmark{font-family:'Pacifico',cursive;color:#fff;line-height:1}
+.tag{letter-spacing:3px;font-size:11px;font-weight:700;color:rgba(255,255,255,.92)}
+.tag b{color:#fff}
+.btn{
+  border:0;border-radius:16px;font-family:inherit;font-weight:700;font-size:16px;
+  padding:16px 20px;cursor:pointer;width:100%;transition:transform .12s ease,filter .2s ease;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 8px 20px rgba(216,0,25,.32)}
+.btn-coral{background:var(--coral);color:#fff;box-shadow:0 8px 20px rgba(242,109,109,.36)}
+.btn-white{background:#fff;color:var(--red)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-sm{padding:11px 16px;font-size:14px;border-radius:12px;width:auto}
+.link{background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline;opacity:.9}
+
+/* Header bar (in-app) */
+.appbar{
+  background:var(--red);color:#fff;padding:16px 18px 14px;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+  padding-top:calc(16px + env(safe-area-inset-top,0px));
+}
+.appbar .script{font-size:26px}
+.appbar h2{font-size:19px;font-weight:800;letter-spacing:.3px}
+.appbar .back{background:rgba(255,255,255,.16);border:0;color:#fff;width:34px;height:34px;border-radius:11px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.appbar .spacer{flex:1}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  border:1.5px solid var(--line);background:#fff;color:var(--slate);
+  border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;
+  transition:all .15s ease;user-select:none;
+}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+.chip.diet.on{background:var(--teal);border-color:var(--teal)}
+.chip-static{background:var(--mist);border:0;color:var(--slate);border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:700}
+.chip-static.hot{background:#FFE9E9;color:var(--red)}
+.chip-static.teal{background:#DFF6F3;color:#0C8073}
+
+/* Field */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--slate);margin-bottom:7px;letter-spacing:.2px}
+.field input,.field select{
+  width:100%;border:1.5px solid var(--line);border-radius:13px;padding:14px;font:inherit;font-size:15px;color:var(--ink);background:#fff;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--coral)}
+
+/* progress */
+.prog{height:5px;background:rgba(255,255,255,.28);border-radius:3px;overflow:hidden;margin:2px 0 0}
+.prog.dark{background:var(--mist)}
+.prog i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .4s ease}
+.prog.dark i{background:var(--coral)}
+
+/* ---------- Onboarding slides ---------- */
+.ob{position:absolute;inset:0;display:none;flex-direction:column;justify-content:space-between;padding:0;background:var(--red)}
+.ob.active{display:flex;animation:fade .4s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- Swipe deck ---------- */
+#deck{flex:1;position:relative;padding:14px 14px 0}
+.card{
+  position:absolute;inset:14px 14px 0;border-radius:24px;overflow:hidden;
+  background:#333;box-shadow:var(--shadow-lg);will-change:transform;
+  display:flex;flex-direction:column;justify-content:flex-end;
+}
+.card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.35) 42%,rgba(0,0,0,0) 68%)}
+.card .body{position:relative;padding:18px 20px 20px;color:#fff}
+.card .name{font-size:25px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card .name .vf{font-size:15px;color:#4FC3F7}
+.card .meta{font-size:13.5px;opacity:.92;margin:4px 0 10px;display:flex;gap:12px;flex-wrap:wrap}
+.card .prompt{background:rgba(255,255,255,.14);backdrop-filter:blur(4px);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:11px;border:1px solid rgba(255,255,255,.15)}
+.card .prompt b{display:block;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+.card .cui{display:flex;flex-wrap:wrap;gap:6px}
+.card .cui span{background:rgba(255,255,255,.2);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600}
+.card .cui span.shared{background:var(--teal);box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.stamp{position:absolute;top:26px;font-size:30px;font-weight:800;letter-spacing:2px;padding:6px 16px;border-radius:12px;border:4px solid;opacity:0;transform:rotate(-14deg);z-index:5}
+.stamp.like{left:20px;color:var(--teal);border-color:var(--teal)}
+.stamp.nope{right:20px;color:var(--coral);border-color:var(--coral)}
+.match-badge{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;background:var(--teal);color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:6px 13px;border-radius:999px;box-shadow:0 6px 14px rgba(18,181,165,.4)}
+.fmbadge{position:absolute;top:14px;right:14px;z-index:6;display:flex;flex-direction:column;align-items:center;gap:3px}
+.fmring{width:58px;height:58px;border-radius:50%;background:conic-gradient(var(--teal) calc(var(--p)*1%),rgba(255,255,255,.3) 0);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.fmring>span{width:46px;height:46px;border-radius:50%;background:rgba(20,24,32,.82);color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.fmring small{font-size:9px;margin-left:1px}
+.fmlbl{font-size:9px;font-weight:800;color:#fff;text-align:center;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.6);letter-spacing:.3px}
+.tonight-badge{position:absolute;top:16px;left:14px;z-index:6;background:rgba(18,181,165,.95);color:#fff;font-size:11px;font-weight:800;padding:6px 11px;border-radius:999px;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.infobtn{position:absolute;bottom:118px;right:16px;z-index:7;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);border:0;font-size:16px;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.prompt-card{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.prompt-card b{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--coral);font-weight:800}
+.prompt-card p{font-size:15px;margin-top:5px;color:var(--ink);line-height:1.4}
+.verdict{flex:1;border:2px solid var(--line);background:#fff;border-radius:18px;padding:20px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:inherit}
+.verdict b{font-size:15px;color:var(--ink)}.verdict small{font-size:11px;color:var(--slate)}
+.verdict:active{transform:scale(.97)}
+.spinner{width:52px;height:52px;border:5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hub-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:#FFF3F3;border:1px solid #F8D7D7;border-radius:14px;padding:12px 6px;cursor:pointer;font-size:20px;color:var(--red)}
+.hub-btn span{font-size:11.5px;font-weight:700}
+.checkrow{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--mist);font-size:14px;line-height:1.45;cursor:pointer}
+.checkrow input{width:22px;height:22px;flex-shrink:0;accent-color:var(--red);margin-top:1px}
+.checkrow u{color:var(--red);cursor:pointer}
+.otp-row{display:flex;gap:9px;justify-content:space-between;margin-top:8px}
+.otp-box{width:100%;aspect-ratio:1;text-align:center;font-size:24px;font-weight:800;border:1.5px solid var(--line);border-radius:12px;color:var(--ink)}
+.otp-box:focus{outline:none;border-color:var(--red)}
+
+/* ---------- TikTok-style vertical feed ---------- */
+.feed-topbar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:8px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent);color:#fff}
+.feed-topbar .script{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.feed-top-btn{background:rgba(255,255,255,.18);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:17px;cursor:pointer;backdrop-filter:blur(4px)}
+.feed{flex:1;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;background:#000}
+.feed::-webkit-scrollbar{width:0}
+.feed-item{position:relative;width:100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#111}
+.feed-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.feed-veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.15) 42%,rgba(0,0,0,.25) 100%)}
+.feed-rail{position:absolute;right:12px;bottom:120px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:20px}
+.rail-btn{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.rail-btn span{font-size:11px;font-weight:700}
+.rail-btn:active{transform:scale(.86)}
+.rail-heart{width:56px;height:56px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 16px rgba(216,0,25,.5)}
+.rail-btn.pass{font-size:24px}.rail-btn.super{color:var(--gold)}.rail-btn.info{font-size:24px}
+.rail-fm{margin-top:2px}
+.rail-fm .fmring{width:52px;height:52px}
+.rail-fm .fmring>span{width:42px;height:42px;font-size:15px}
+.feed-info{position:absolute;left:18px;right:84px;bottom:104px;z-index:9;color:#fff}
+.feed-name{font-size:24px;font-weight:800;display:flex;align-items:center;gap:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.feed-name .vf{font-size:15px;color:#4FC3F7}
+.feed-meta{font-size:13.5px;opacity:.95;margin:5px 0 10px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.feed-prompt{background:rgba(255,255,255,.16);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:11px 13px;font-size:13.5px;margin-bottom:11px;line-height:1.4}
+.feed-prompt b{display:block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;opacity:.8;margin-bottom:3px}
+.feed-cui{display:flex;flex-wrap:wrap;gap:7px}
+.feed-cui span{background:rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;backdrop-filter:blur(4px)}
+.feed-cui span.shared{background:var(--teal);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+.feed-item.fly-left{animation:flyL .42s ease forwards}
+.feed-item.fly-right{animation:flyR .42s ease forwards}
+.feed-item.fly-up{animation:flyU .42s ease forwards}
+@keyframes flyL{to{transform:translateX(-100%) rotate(-8deg);opacity:0}}
+@keyframes flyR{to{transform:translateX(100%) rotate(8deg);opacity:0}}
+@keyframes flyU{to{transform:translateY(-100%);opacity:0}}
+.heart-burst{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;color:var(--red);z-index:15;animation:burst .5s ease forwards;pointer-events:none;text-shadow:0 4px 20px rgba(0,0,0,.4)}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(0);opacity:0}40%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+.feed-hint{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);z-index:8;color:#fff;font-size:12px;opacity:.7;display:flex;flex-direction:column;align-items:center;gap:2px;animation:bob 1.6s ease-in-out infinite;pointer-events:none}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+
+/* ---------- "sign-up is cooking" animation ---------- */
+.cooking-pot{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.pot{font-size:72px;animation:potbob 2.2s ease-in-out infinite}
+@keyframes potbob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+.pot-steam{position:absolute;top:6px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:2}
+.pot-steam span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.7);animation:steam 2.4s ease-in-out infinite}
+.pot-steam span:nth-child(2){animation-delay:.5s}
+.pot-steam span:nth-child(3){animation-delay:1s}
+@keyframes steam{0%{transform:translateY(20px) scale(.6);opacity:0}30%{opacity:.9}100%{transform:translateY(-30px) scale(1.6);opacity:0}}
+.mini-spin{width:14px;height:14px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#5EEAD4;border-radius:50%;display:inline-block;animation:spin .9s linear infinite;flex-shrink:0}
+#deckEmpty{position:absolute;inset:14px 14px 0;border-radius:24px;background:var(--mist);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--slate)}
+
+/* deck action bar */
+.actions{display:flex;gap:14px;align-items:center;justify-content:center;padding:16px 0 8px}
+.act{border:0;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:var(--shadow);transition:transform .12s}
+.act:active{transform:scale(.9)}
+.act.sm{width:50px;height:50px;font-size:20px}
+.act.lg{width:64px;height:64px;font-size:26px}
+.act.nope{color:var(--coral)} .act.like{color:var(--teal)} .act.star{color:var(--gold)} .act.rewind{color:#7C8698}
+
+/* bottom nav */
+.tabbar{
+  display:flex;background:#fff;border-top:1px solid var(--line);flex-shrink:0;
+  padding-bottom:var(--safe-b);
+}
+.tabbar button{flex:1;background:none;border:0;padding:11px 0 10px;cursor:pointer;color:#9AA3B0;font-size:22px;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar button span{font-size:10px;font-weight:700}
+.tabbar button.on{color:var(--red)}
+.tabbar button .dot{position:absolute;top:6px;right:calc(50% - 18px);background:var(--coral);color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* Match overlay */
+#matchOverlay{position:absolute;inset:0;z-index:60;background:linear-gradient(160deg,var(--red),var(--red-dark));display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff}
+#matchOverlay.show{display:flex;animation:fade .35s}
+.match-photos{display:flex;justify-content:center;margin:8px 0 20px}
+.match-photos .mp{width:118px;height:118px;border-radius:50%;border:4px solid #fff;object-fit:cover;box-shadow:var(--shadow-lg)}
+.match-photos .mp:last-child{margin-left:-26px}
+.confetti{position:absolute;width:9px;height:14px;border-radius:2px;top:-20px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(120vh) rotate(540deg);opacity:.2}}
+
+/* explore cards */
+.vcard{display:flex;gap:12px;border:1px solid var(--line);border-radius:18px;padding:11px;margin-bottom:13px;cursor:pointer;background:#fff;transition:transform .12s,box-shadow .2s}
+.vcard:active{transform:scale(.99)}
+.vcard img{width:92px;height:92px;border-radius:13px;object-fit:cover;flex-shrink:0}
+.vcard .vc{flex:1;min-width:0}
+.vcard .vn{font-weight:800;font-size:15.5px}
+.vcard .vsub{font-size:12.5px;color:var(--slate);margin:2px 0 7px;display:flex;gap:9px;flex-wrap:wrap}
+.rowb{display:flex;gap:6px;flex-wrap:wrap}
+.offer{background:var(--red);color:#fff;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:7px;letter-spacing:.2px}
+
+/* section head */
+.shead{display:flex;align-items:baseline;justify-content:space-between;margin:4px 0 12px}
+.shead h3{font-size:17px;font-weight:800}
+.shead .more{color:var(--coral);font-size:13px;font-weight:700;cursor:pointer;background:none;border:0}
+
+/* chat list */
+.crow{display:flex;gap:13px;align-items:center;padding:13px 4px;border-bottom:1px solid var(--mist);cursor:pointer}
+.crow img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+.crow .ci{flex:1;min-width:0}
+.crow .cn{font-weight:700;font-size:15px;display:flex;justify-content:space-between}
+.crow .cn small{font-weight:500;color:#9AA3B0;font-size:11px}
+.crow .cm{font-size:13px;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.crow .badge{background:var(--coral);color:#fff;font-size:10px;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+
+/* chat thread */
+#thread{flex:1;overflow-y:auto;padding:16px;background:#FAFBFC;display:flex;flex-direction:column;gap:9px}
+.bub{max-width:78%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.4}
+.bub.them{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:5px}
+.bub.me{background:var(--ink);color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
+.bub.venue{align-self:flex-start;padding:0;overflow:hidden;background:#fff;border:1px solid var(--line);width:80%;border-radius:16px}
+.bub.venue img{width:100%;height:96px;object-fit:cover;display:block}
+.bub.venue .vb{padding:10px 12px}
+.bub.venue .vb b{font-size:14px}
+.bub.venue .vb p{font-size:11.5px;color:var(--slate);margin:2px 0 8px}
+.typing{align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:16px;border-bottom-left-radius:5px;padding:13px 16px;display:flex;gap:4px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#B7BFC9;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.ice{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;background:#fff;border-top:1px solid var(--mist)}
+.ice::-webkit-scrollbar{height:0}
+.ice button{white-space:nowrap;background:#FFE9E9;color:var(--red);border:0;border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0}
+.composer{display:flex;gap:9px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);background:#fff;padding-bottom:calc(11px + var(--safe-b))}
+.composer input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:12px 16px;font:inherit;font-size:14px}
+.composer input:focus{outline:none;border-color:var(--coral)}
+.composer .send{background:var(--red);color:#fff;border:0;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.composer .share{background:#fff;color:var(--red);border:1.5px solid var(--red);width:44px;height:44px;border-radius:50%;font-size:19px;cursor:pointer;flex-shrink:0}
+
+/* venue detail */
+#vdImg{width:100%;height:230px;object-fit:cover}
+.vdhead{padding:18px 20px 0}
+.vdhead h2{font-size:23px;font-weight:800}
+.vdrow{display:flex;align-items:center;gap:7px;color:var(--slate);font-size:13.5px;margin-top:6px}
+.info-line{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--mist);font-size:14px}
+.info-line .ic{font-size:18px;width:24px;text-align:center}
+.info-line b{display:block;font-size:12px;color:var(--slate);font-weight:700;margin-bottom:2px}
+
+/* booking */
+.seg{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px}
+.seg::-webkit-scrollbar{height:0}
+.datep{flex-shrink:0;border:1.5px solid var(--line);border-radius:14px;padding:11px 15px;text-align:center;cursor:pointer;min-width:60px}
+.datep.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.datep b{display:block;font-size:11px;opacity:.8}.datep span{font-size:19px;font-weight:800}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.slot{border:1.5px solid var(--line);border-radius:12px;padding:12px 0;text-align:center;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--slate)}
+.slot.on{background:var(--red);border-color:var(--red);color:#fff}
+.slot.off{opacity:.4;pointer-events:none}
+.stepper{display:flex;align-items:center;gap:18px}
+.stepper button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--coral);background:#fff;color:var(--coral);font-size:20px;font-weight:700;cursor:pointer}
+.stepper span{font-size:20px;font-weight:800;min-width:24px;text-align:center}
+
+/* profile */
+.pfhero{position:relative}
+.pfhero img{width:100%;height:250px;object-fit:cover}
+.pfhero .grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.pfhero .nm{position:absolute;bottom:16px;left:20px;color:#fff}
+.pfhero .nm h2{font-size:24px;font-weight:800}
+.tier{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#F6D488,#D9A441);color:#5C4008;font-weight:800;font-size:12px;padding:5px 12px;border-radius:999px;margin-top:6px}
+.menu-row{display:flex;align-items:center;gap:14px;padding:16px 4px;border-bottom:1px solid var(--mist);font-size:15px;font-weight:600;cursor:pointer}
+.menu-row .ic{font-size:20px;width:26px;text-align:center}
+.menu-row .ar{margin-left:auto;color:#C4CBD4}
+
+/* plans */
+.plan{border:2px solid var(--line);border-radius:20px;padding:20px;margin-bottom:15px;position:relative}
+.plan.gold{border-color:var(--gold);background:linear-gradient(180deg,#FFFBF2,#fff)}
+.plan .pt{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--slate)}
+.plan.gold .pt{color:#B8860B}
+.plan .pp{font-size:32px;font-weight:800;margin:6px 0 3px}
+.plan .pp small{font-size:14px;font-weight:600;color:var(--slate)}
+.plan ul{list-style:none;margin:14px 0 0}
+.plan li{font-size:13.5px;padding:6px 0 6px 26px;position:relative;color:var(--ink)}
+.plan li:before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:800}
+.plan .rec{position:absolute;top:-11px;right:18px;background:var(--gold);color:#fff;font-size:10.5px;font-weight:800;padding:4px 11px;border-radius:999px;letter-spacing:.5px}
+
+.toast{position:absolute;bottom:calc(80px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font-size:13.5px;font-weight:600;opacity:0;transition:all .3s;z-index:70;white-space:nowrap;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.muted{color:var(--slate)}
+.h-sub{font-size:13px;color:var(--slate);line-height:1.5}
+h1.big{font-size:29px;font-weight:800;line-height:1.15}
+.divide{height:1px;background:var(--mist);margin:16px 0}
+.safety{background:#FFF6F6;border:1px solid #F8D7D7;border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--red-dark);line-height:1.55}
+.pill-toggle{display:flex;background:var(--mist);border-radius:12px;padding:4px;margin-bottom:14px}
+.pill-toggle button{flex:1;border:0;background:none;padding:9px;border-radius:9px;font:inherit;font-weight:700;font-size:13.5px;color:var(--slate);cursor:pointer}
+.pill-toggle button.on{background:#fff;color:var(--red);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+
+/* explore search */
+.searchwrap{padding:12px 16px 14px;border-bottom:1px solid var(--mist);flex-shrink:0;background:#fff}
+.searchbar{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:4px 4px 4px 12px;background:#fff}
+.searchbar input{flex:1;border:0;font:inherit;font-size:14px;padding:9px 0;outline:none}
+.sbtn{background:var(--red);color:#fff;border:0;border-radius:11px;padding:10px 14px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0}
+.radius-row{display:flex;align-items:center;gap:12px;margin:12px 0 10px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:var(--mist)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--red);cursor:pointer;box-shadow:0 2px 6px rgba(216,0,25,.4)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--red);cursor:pointer}
+
+/* map */
+.mapbox{position:relative;width:100%;height:420px;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#E8EDF2,#DDE6EC);border:1px solid var(--line)}
+.mapgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(150,165,180,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(150,165,180,.25) 1px,transparent 1px);background-size:38px 38px}
+.mapbox:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(18,181,165,.08),transparent 60%)}
+.pin{position:absolute;transform:translate(-50%,-100%);background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;z-index:2}
+.pin .pindot{width:32px;height:32px;border-radius:50% 50% 50% 2px;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px rgba(0,0,0,.28);transform:rotate(0)}
+.pin .pinlbl{font-size:10px;font-weight:700;background:#fff;padding:2px 6px;border-radius:6px;margin-top:3px;box-shadow:0 2px 5px rgba(0,0,0,.12);white-space:nowrap}
+.pin.me{z-index:1}.pin.me .pindot{background:var(--ink)}
+
+/* group meet-ups */
+.gcard{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:14px}
+.gcard .gtop{height:96px;position:relative;display:flex;align-items:flex-end;padding:12px}
+.gcard .gtop .gv{color:#fff;font-weight:800;font-size:15px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.gcard .gbody{padding:13px 15px}
+.gcard .gmeta{font-size:12.5px;color:var(--slate);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.avstack{display:flex}
+.avstack img{width:30px;height:30px;border-radius:50%;border:2px solid #fff;object-fit:cover;margin-left:-8px}
+.avstack img:first-child{margin-left:0}
+.avstack .more{width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:var(--coral);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:-8px}
+
+/* video call */
+#callScreen{position:absolute;inset:0;background:#12141a;z-index:85;display:none;flex-direction:column}
+#callScreen.show{display:flex}
+.callmain{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.callmain img{width:100%;height:100%;object-fit:cover;filter:brightness(.85)}
+.callself{position:absolute;bottom:18px;right:16px;width:96px;height:132px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.5);box-shadow:var(--shadow-lg)}
+.callself img{width:100%;height:100%;object-fit:cover}
+.callinfo{position:absolute;top:calc(20px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;color:#fff}
+.callinfo h3{font-size:20px;font-weight:800}.callinfo p{font-size:13px;opacity:.8;margin-top:3px}
+.callbar{display:flex;justify-content:center;gap:18px;padding:22px 0 calc(28px + var(--safe-b))}
+.callbtn{width:58px;height:58px;border-radius:50%;border:0;font-size:23px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#fff}
+.callbtn.end{background:#E23B3B}
+.callbadge{position:absolute;top:calc(70px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(18,181,165,.9);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px}
+
+/* safety toolkit */
+.safety-tile{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:11px}
+.safety-tile .st-ic{width:42px;height:42px;border-radius:12px;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.safety-tile b{font-size:14.5px}.safety-tile p{font-size:12.5px;color:var(--slate);margin-top:2px;line-height:1.45}
+.safety-tile .sw{margin-left:auto;align-self:center}
+.switch{width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.switch.on{background:var(--teal)}
+.switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on i{left:21px}
+</style>
+</head>
+<body>
+<div id="device">
+  <div id="screens"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="venues.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+
+// ---- Sample data ---------------------------------------------------
+const CUISINES = ["Italian","Indian","Japanese","Lebanese","Chinese","Thai","Mexican","French","Korean","Turkish","Greek","Spanish","Vietnamese","Ethiopian"];
+const DIETS = ["Halal","Kosher","Vegan","Vegetarian","Gluten-free","Pescatarian"];
+
+const me = { name:"You", cuisines:["Italian","Japanese","Lebanese"], diets:["Halal"],
+  age:null, gender:null, lookingFor:null, agreedTerms:false,
+  accountStatus:"new", // new → pending (awaiting admin) → approved
+  taste:{spice:2,adventure:2,sweet:1,dining:1}, // 0-3 scales; set by the food game
+  foodieType:"Explorer", badges:["verified"], cuisinesTried:3 };
+// taste axes: spice(mild→fire), adventure(comfort→adventurous), sweet(savoury→sweettooth), dining(homecook→restaurant)
+
+const FOODIES = [
+  {id:1,name:"Amara",age:27,dist:"1.2 mi",looking:"Relationship",verified:true,
+   img:"img/p4.jpg", tonight:true, foodieType:"Comfort seeker",
+   taste:{spice:1,adventure:1,sweet:2,dining:2},
+   dish:"img/rv6.jpg",
+   cuisines:["Italian","Lebanese","Thai"],
+   prompt:{q:"My go-to comfort dish",a:"A proper bowl of cacio e pepe on a rainy night."},
+   prompt2:{q:"Death-row dessert",a:"Tiramisu. No debate."}},
+  {id:2,name:"Priya",age:29,dist:"0.8 mi",looking:"Something casual",verified:true,
+   img:"img/p1.jpg", tonight:true, foodieType:"Adventurer",
+   taste:{spice:3,adventure:3,sweet:1,dining:1},
+   dish:"img/rv7.jpg",
+   cuisines:["Indian","Japanese","Korean"],
+   prompt:{q:"Order for the table or your own?",a:"Order for the table — always. Sharing is the whole point."},
+   prompt2:{q:"Spice tolerance",a:"Bring the ghost chilli. I'll finish yours too."}},
+  {id:3,name:"Sofia",age:25,dist:"2.4 mi",looking:"Relationship",verified:false,
+   img:"img/p16.jpg", tonight:false, foodieType:"Explorer",
+   taste:{spice:2,adventure:3,sweet:2,dining:3},
+   dish:"img/rv5.jpg",
+   cuisines:["Japanese","Italian","French"],
+   prompt:{q:"Best meal you've had this year",a:"Omakase in Soho. I still think about the uni."},
+   prompt2:{q:"My weakness",a:"A tasting menu with wine pairing."}},
+  {id:4,name:"Leila",age:31,dist:"3.1 mi",looking:"New friends",verified:true,
+   img:"img/p13.jpg", tonight:false, foodieType:"Sweet tooth",
+   taste:{spice:2,adventure:2,sweet:3,dining:2},
+   dish:"img/rv4.jpg",
+   cuisines:["Lebanese","Turkish","Greek"],
+   prompt:{q:"Sweet or savoury?",a:"Both, at once, no notes. Baklava counts as breakfast."},
+   prompt2:{q:"Hosting or going out?",a:"Come to mine — I'll feed you til you can't move."}},
+  {id:5,name:"Chloé",age:26,dist:"1.9 mi",looking:"Relationship",verified:true,
+   img:"img/p8.jpg", tonight:true, foodieType:"Restaurant explorer",
+   taste:{spice:1,adventure:2,sweet:2,dining:3},
+   dish:"img/rv8.jpg",
+   cuisines:["French","Italian","Spanish"],
+   prompt:{q:"Dream dinner guest",a:"Someone who'll split a bottle and stay for dessert."},
+   prompt2:{q:"Perfect date",a:"Aperitivo, then somewhere we've never tried."}}
+];
+
+// Full London dataset from venues.js — normalise fields the app expects
+const MY_LOC = {lat:51.5074,lng:-0.1278,label:"Central London"}; // default "me" location
+function haversineMi(a,b){const R=3959;const dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180;const la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;const x=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;return R*2*Math.asin(Math.sqrt(x));}
+const VENUES = (window.LONDON_VENUES||[]).map(v=>({
+  ...v,
+  area:v.area+", London",
+  addr:v.area+" · "+v.postcode,
+  dist:haversineMi(MY_LOC,{lat:v.lat,lng:v.lng}).toFixed(1)+" mi",
+  distMi:haversineMi(MY_LOC,{lat:v.lat,lng:v.lng})
+}));
+
+// shared-cuisine helper
+const shared = (a,b)=>a.filter(c=>b.includes(c));
+
+/* ---------- FLAVOUR MATCH % (signature) ---------- */
+function flavourMatch(f){
+  // cuisine overlap (0-45), taste-axis closeness (0-40), dietary fit (0-15)
+  const sh=shared(me.cuisines,f.cuisines).length;
+  const cuiScore=Math.min(45, sh*18);
+  let axisDist=0;
+  ["spice","adventure","sweet","dining"].forEach(k=>{axisDist+=Math.abs((me.taste[k]??1.5)-(f.taste[k]??1.5));});
+  const axisScore=Math.round(40*(1-axisDist/12)); // max dist 12
+  const dietScore=me.diets.length? (me.diets.some(d=>true)?12:0):10;
+  let pct=Math.round(cuiScore+axisScore+dietScore);
+  pct=Math.max(58,Math.min(99,pct)); // keep it flattering-but-varied
+  return pct;
+}
+function matchReason(f){
+  const sh=shared(me.cuisines,f.cuisines);
+  if(sh.length>=2)return `You both love ${sh.slice(0,2).join(" & ")}`;
+  if(f.taste.spice>=3&&me.taste.spice>=2)return "You can both take the heat 🌶️";
+  if(f.taste.sweet>=3)return "A fellow dessert-first Foodie 🍰";
+  if(f.taste.adventure>=3)return "Two adventurous palates 🌍";
+  if(sh.length===1)return `You share a love of ${sh[0]}`;
+  return "Worth a taste 😋";
+}
+const FOODIE_TYPES={
+  "Explorer":"🧭","Adventurer":"🌶️","Comfort seeker":"🍜","Sweet tooth":"🍰","Restaurant explorer":"🍽️","Home cook":"👨‍🍳"
+};
+
+/* ---------- BADGES / PASSPORT ---------- */
+const ALL_BADGES=[
+  {id:"verified",icon:"✅",name:"Verified",desc:"Photo verified — a genuine Foodie"},
+  {id:"firstmatch",icon:"💘",name:"First Match",desc:"Made your first Foodie match"},
+  {id:"explorer",icon:"🌍",name:"Globe Trotter",desc:"Liked 5+ cuisines"},
+  {id:"booker",icon:"📅",name:"Table Booker",desc:"Booked your first table"},
+  {id:"social",icon:"👥",name:"Social Butterfly",desc:"Joined a group meet-up"},
+  {id:"dessert",icon:"🍨",name:"Dessert Club",desc:"Always orders dessert"},
+  {id:"spicy",icon:"🌶️",name:"Heat Seeker",desc:"Spice level: fire"},
+  {id:"nightowl",icon:"🌙",name:"Spontaneous",desc:"Used Eat Tonight"}
+];
+function awardBadge(id){
+  if(me.badges.includes(id))return;
+  me.badges.push(id);
+  const b=ALL_BADGES.find(x=>x.id===id);
+  if(b){toast(`${b.icon} Badge unlocked: ${b.name}`);notify(`Badge unlocked ${b.icon}`,b.name+" — "+b.desc);}
+}
+
+// ---- App state -----------------------------------------------------
+const state = {
+  step:0,             // onboarding step
+  selCuisines:[...me.cuisines],
+  selDiets:[...me.diets],
+  deckIdx:0,
+  lastSwiped:null,
+  matches:[],         // foodie objects matched
+  activeChat:null,
+  threads:{},         // id -> [{who,text,venue}]
+  bookingVenue:null,
+  bookDate:0,bookSlot:null,bookGuests:2,
+  tab:"discover",
+  tier:"free",
+  radius:5, exFilter:"all", exDiets:[], exView:"list", searchCentre:null, searchLabel:null,
+  groups:[], liked:[], passed:[], likedMe:[2,3,4], eventsBooked:[], verified:false,
+  myBookings:[
+    {venueId:2,date:"Sat 9 Aug",time:"7:30pm",guests:2,withName:"Priya",when:"upcoming"},
+    {venueId:8,date:"Thu 3 Jul",time:"8:00pm",guests:2,withName:"a match",when:"past"},
+    {venueId:5,date:"Fri 20 Jun",time:"7:00pm",guests:4,withName:null,when:"past"}
+  ]
+};
+
+// seed one existing match + chat so the app isn't empty
+state.matches.push(FOODIES[1]);
+state.threads[FOODIES[1].id]=[
+  {who:"them",text:"Hey! Saw we both can't say no to Japanese 🍣"},
+  {who:"me",text:"Guilty. Omakase or ramen person?"},
+  {who:"them",text:"Both, obviously. Where are you thinking?"}
+];
+
+const $=(s,r=document)=>r.querySelector(s);
+const screensEl=$("#screens");
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1900);}
+
+// ---- Screen router -------------------------------------------------
+const routes={};
+function route(name,builder){routes[name]=builder;}
+let current=null;
+function go(name,opts){
+  const html=routes[name](opts||{});
+  let el=document.createElement("div");
+  el.className="screen"+(routes[name].red?" red-bg":"");
+  el.innerHTML=html;
+  el.id="scr-"+name;
+  // remove old same-id
+  const old=$("#scr-"+name);if(old)old.remove();
+  screensEl.appendChild(el);
+  requestAnimationFrame(()=>{
+    document.querySelectorAll(".screen.active").forEach(s=>{if(s!==el)s.classList.remove("active")});
+    el.classList.add("active");
+  });
+  if(routes[name].after)routes[name].after(el,opts||{});
+  current=name;
+  setTimeout(()=>{document.querySelectorAll(".screen").forEach(s=>{if(!s.classList.contains("active")&&s!==el)s.remove();});},400);
+}
+
+/* =========================================================
+   ONBOARDING
+   ========================================================= */
+route("welcome",()=>`
+  <div class="center" style="flex:1;padding:40px 30px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div class="brandmark" style="font-size:64px">Yumble</div>
+      <div class="tag" style="margin-top:10px">LOVE <b>FOOD</b> . LOVE <b>LIFE</b></div>
+      <p style="color:#fff;font-size:20px;font-weight:600;margin-top:46px;opacity:.95">Are you hungry<br>for love?</p>
+    </div>
+    <div style="width:100%">
+      <button class="btn btn-white" onclick="go('signup')">Get started</button>
+      <button class="link" style="color:#fff;margin-top:18px;width:100%" onclick="returningLogin()">I already have an account</button>
+    </div>
+  </div>`);
+routes.welcome.red=true;
+
+route("signup",()=>`
+  <div class="scroll center red-bg" style="padding:44px 30px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%">
+      <div class="brandmark" style="font-size:44px">Yumble</div>
+      <div class="tag" style="margin:8px 0 40px">LOVE <b>FOOD</b> . LOVE <b>LIFE</b></div>
+      <p style="color:#fff;font-size:12px;letter-spacing:2px;font-weight:700;margin-bottom:18px">SIGN UP WITH</p>
+      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="googleSignup()">
+        <span style="font-size:17px">🔴</span> Continue with Google</button>
+      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="appleSignup()">
+        <span style="font-size:18px"></span> Continue with Apple</button>
+      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
+        <span style="font-size:18px">📷</span> Continue with Instagram</button>
+      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
+        <span style="color:#1877F2;font-size:18px">f</span> Continue with Facebook</button>
+      <button class="btn btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
+        ✉️ Use your email</button>
+    </div>
+    <p style="color:rgba(255,255,255,.7);font-size:11px;margin-top:26px;line-height:1.5">By continuing you agree to our Terms and Privacy Policy</p>
+  </div>`);
+routes.signup.red=true;
+
+/* ---- Demo Google sign-up (looks like real OAuth; real flow needs a backend) ---- */
+function googleSignup(){go("google");}
+function appleSignup(){toast("Apple sign-in — demo");startOnboard();}
+route("google",()=>`
+  <div class="scroll" style="background:#fff;padding:0">
+    <div style="max-width:400px;margin:0 auto;padding:28px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">
+        <svg width="24" height="24" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span style="font-size:15px;color:#5f6368">Sign in with Google</span>
+      </div>
+      <h2 style="font-size:24px;font-weight:400;color:#202124;margin-bottom:6px">Choose an account</h2>
+      <p style="font-size:14px;color:#5f6368;margin-bottom:24px">to continue to <b style="font-weight:500">Yumble</b></p>
+      <div style="border:1px solid #dadce0;border-radius:8px;overflow:hidden">
+        ${[{n:"Alex Morgan",e:"alex.morgan@gmail.com",c:"#DB4437"},{n:"Sam Taylor",e:"sam.taylor@gmail.com",c:"#4285F4"}].map(a=>`
+          <div onclick="googlePicked('${a.n}')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid #f1f3f4" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='#fff'">
+            <div style="width:34px;height:34px;border-radius:50%;background:${a.c};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500">${a.n[0]}</div>
+            <div><div style="font-size:14px;color:#202124;font-weight:500">${a.n}</div><div style="font-size:13px;color:#5f6368">${a.e}</div></div>
+          </div>`).join("")}
+        <div onclick="startOnboard()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='#fff'">
+          <div style="width:34px;height:34px;border-radius:50%;border:1px solid #dadce0;display:flex;align-items:center;justify-content:center;color:#5f6368">+</div>
+          <div style="font-size:14px;color:#202124">Use another account</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#5f6368;line-height:1.6;margin-top:24px">To continue, Google will share your name, email address and profile picture with Yumble. <span style="color:#1a73e8">Privacy Policy</span> and <span style="color:#1a73e8">Terms</span>.</p>
+      <div style="display:flex;justify-content:space-between;margin-top:26px">
+        <button class="link" style="color:#1a73e8;text-decoration:none;font-weight:500;font-size:14px" onclick="go('signup')">Cancel</button>
+      </div>
+      <p style="font-size:11px;color:#9aa0a6;margin-top:30px;text-align:center;border-top:1px solid #f1f3f4;padding-top:14px">Demo sign-in — a real Google login connects to your backend.</p>
+    </div>
+  </div>`);
+function googlePicked(name){me.name=name.split(" ")[0];toast("Signed in as "+name);startOnboard();}
+
+// onboarding flow container
+const OB_STEPS=["details","terms","otp","cuisine","game","diet","photos","selfie","id","submitting"];
+function startOnboard(){state.step=0;me.accountStatus="new";go("onboard");}
+// Returning login: stay-logged-in means no password; route by status
+function returningLogin(){
+  // DEMO: simulate a returning, already-approved account
+  if(me.accountStatus==="approved"){state.tab="discover";go("app");setTimeout(askNotifications,600);return;}
+  if(me.accountStatus==="pending"){go("verifyPending");return;}
+  // otherwise show a quick account picker to demo the two states
+  go("loginDemo");
+}
+route("loginDemo",()=>`
+  <div class="scroll center red-bg" style="padding:40px 30px;color:#fff">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%">
+      <div class="brandmark" style="font-size:40px">Yumble</div>
+      <p style="opacity:.9;margin:20px 0 24px;text-align:center">Welcome back! (Demo — choose a state to preview)</p>
+      <button class="btn btn-white" style="margin-bottom:12px" onclick="me.accountStatus='approved';me.name='Alex';returningLogin()">✓ Approved account → go to swiping</button>
+      <button class="btn btn-ghost" onclick="me.accountStatus='pending';me.name='Alex';go('verifyPending')">⏳ Still-in-review account</button>
+    </div>
+    <button class="link" style="color:#fff" onclick="go('welcome')">Back</button>
+  </div>`);
+routes.loginDemo.red=true;
+function obNext(){state.step++;if(state.step>=OB_STEPS.length){enterApp();return;}go("onboard");}
+function obBack(){if(state.step===0){go("signup");return;}state.step--;go("onboard");}
+
+route("onboard",()=>{
+  const step=OB_STEPS[state.step];
+  const pct=((state.step)/(OB_STEPS.length-1))*100;
+  let inner="";
+  let hideContinue=false;
+  if(step==="details"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Tell us a little<br>about you</h1>
+      <p class="h-sub" style="margin-bottom:22px">All fields required. You must be 18+ to join Yumble.</p>
+      <div class="field"><label>First name *</label><input id="f_name" placeholder="e.g. Alex" oninput="checkDetails()"></div>
+      <div class="field"><label>Date of birth * (must be 18+)</label><input id="f_dob" type="date" onchange="checkDetails()"></div>
+      <div class="field"><label>I am a *</label>
+        <select id="f_gender" onchange="checkDetails()"><option value="">Select…</option><option>Woman</option><option>Man</option><option>Non-binary</option></select></div>
+      <div class="field"><label>Looking for *</label>
+        <select id="f_looking" onchange="checkDetails()"><option value="">Select…</option><option>Relationship</option><option>Something casual</option><option>New friends</option><option>Dinner company</option></select></div>
+      <div class="field"><label>Location *</label><input id="f_loc" placeholder="Select within UK" value="London" oninput="checkDetails()"></div>
+      <p id="ageErr" style="color:var(--red);font-size:13px;font-weight:600;display:none">You must be 18 or over to use Yumble.</p>`;
+  }else if(step==="terms"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Before you start</h1>
+      <p class="h-sub" style="margin-bottom:20px">Your safety and privacy matter. Please read and agree to continue.</p>
+      ${[
+        ["t_age","I confirm I am 18 years or older."],
+        ["t_terms","I agree to the <u>Terms &amp; Conditions</u>."],
+        ["t_gdpr","I consent to Yumble processing my data under its <u>Privacy Policy (GDPR)</u>, including my ID for verification."],
+        ["t_comm","I agree to the <u>Community Guidelines</u> and to treat other Foodies with respect."]
+      ].map(([id,txt])=>`
+        <label class="checkrow"><input type="checkbox" id="${id}" onchange="checkTerms()"><span>${txt}</span></label>`).join("")}
+      <div style="background:var(--mist);border-radius:12px;padding:13px 15px;font-size:12px;color:var(--slate);line-height:1.5;margin-top:14px">Yumble verifies every member with a selfie and photo ID to keep the community genuine and safe. Your ID is checked securely and never shown to other users.</div>`;
+    hideContinue=true;
+  }else if(step==="otp"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Verify your number</h1>
+      <p class="h-sub" style="margin-bottom:8px">We've sent a 6-digit code by SMS to your phone. (Demo code: <b>123456</b>)</p>
+      <div class="field" style="margin-top:16px"><label>Mobile number *</label><input id="f_phone" type="tel" placeholder="+44…" value="+44 7700 900000"></div>
+      <div class="otp-row" id="otpRow">${[0,1,2,3,4,5].map(i=>`<input class="otp-box" maxlength="1" inputmode="numeric" data-i="${i}" oninput="otpInput(this)">`).join("")}</div>
+      <button class="link" style="color:var(--coral);margin-top:16px" onclick="toast('New code sent 📱')">Resend code</button>`;
+    hideContinue=true;
+  }else if(step==="cuisine"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">What do you<br>love to eat?</h1>
+      <p class="h-sub" style="margin-bottom:20px">Pick your favourites — we match people who share your taste.</p>
+      <div class="chips" id="cuiChips">
+        ${CUISINES.map(c=>`<button class="chip ${state.selCuisines.includes(c)?'on':''}" onclick="toggleCui(this,'${c}')">${c}</button>`).join("")}
+      </div>`;
+  }else if(step==="game"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Quick taste test 🍴</h1>
+      <p class="h-sub" style="margin-bottom:18px">Tap your pick. This builds your Taste Profile — the secret sauce behind your matches.</p>
+      <div id="gameArea"></div>`;
+    hideContinue=true;
+  }else if(step==="diet"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Any dietary or<br>faith preferences?</h1>
+      <p class="h-sub" style="margin-bottom:20px">We'll only suggest venues that cater to you. Optional.</p>
+      <div class="chips">
+        ${DIETS.map(d=>`<button class="chip diet ${state.selDiets.includes(d)?'on':''}" onclick="toggleDiet(this,'${d}')">${d}</button>`).join("")}
+      </div>`;
+  }else if(step==="photos"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Add your photos</h1>
+      <p class="h-sub" style="margin-bottom:20px">At least one photo is required. Clear face photos get the best matches.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        ${[0,1,2,3,4,5].map(i=>`<div onclick="addPhoto(${i})" style="aspect-ratio:3/4;border-radius:14px;background:${i===0?'#ddd':'var(--mist)'};display:flex;align-items:center;justify-content:center;color:#B7BFC9;font-size:26px;border:2px dashed ${i===0?'transparent':'#D6DCE3'};overflow:hidden;cursor:pointer">${i===0?'<img src="img/p6.jpg" style="width:100%;height:100%;object-fit:cover">':'＋'}</div>`).join("")}
+      </div>
+      <p class="h-sub" style="margin-top:14px">✓ 1 photo added — you can add more later.</p>`;
+  }else if(step==="selfie"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Verification: selfie</h1>
+      <p class="h-sub" style="margin-bottom:20px">Take a live selfie so we can confirm you're a real person. Required for everyone's safety.</p>
+      <div class="center">
+        <div style="width:210px;height:270px;border-radius:20px;background:#12141a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
+          <div style="width:145px;height:185px;border:3px dashed rgba(255,255,255,.4);border-radius:50%"></div>
+          <div style="position:absolute;bottom:14px;color:#fff;font-size:12px;opacity:.8">Position your face in the oval</div>
+        </div>
+      </div>`;
+    hideContinue=true;
+  }else if(step==="id"){
+    inner=`
+      <h1 class="big" style="margin-bottom:6px">Verification: photo ID</h1>
+      <p class="h-sub" style="margin-bottom:20px">Upload a passport or driving licence. Checked securely, never shown to other users.</p>
+      <div class="chips" style="justify-content:center;margin-bottom:18px">
+        <span class="chip on">Passport</span><span class="chip">Driving licence</span><span class="chip">ID card</span>
+      </div>
+      <div class="center">
+        <div style="width:260px;height:165px;border-radius:16px;background:#F4F6F8;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:38px">🪪</div>
+          <div style="font-size:12px;color:var(--slate);margin-top:6px">Tap to scan your ID</div>
+        </div>
+      </div>
+      <div style="background:#FFF6F6;border:1px solid #F8D7D7;border-radius:12px;padding:12px 15px;font-size:12px;color:var(--red-dark);margin-top:18px;line-height:1.5">🔒 Your ID is used once to verify your identity and age, then securely stored by our verification partner — never visible to other members.</div>`;
+    hideContinue=true;
+  }else if(step==="submitting"){
+    inner="";
+  }
+
+  if(step==="submitting"){
+    return `<div class="scroll red-bg center" style="padding:40px 30px;color:#fff">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="spinner"></div>
+        <h2 style="font-size:21px;font-weight:800;margin-top:24px">Submitting for review…</h2>
+        <p style="opacity:.9;font-size:14px;margin-top:8px;text-align:center">Uploading your selfie & ID securely</p>
+      </div>
+    </div>`;
+  }
+
+  // step-specific footer button
+  let footer;
+  if(step==="terms") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="obNext()">Agree & continue</button>`;
+  else if(step==="otp") footer=`<button class="btn btn-coral" onclick="verifyOtp()">Verify code</button>`;
+  else if(step==="selfie") footer=`<button class="btn btn-coral" onclick="obNext()">📸 Capture selfie</button>`;
+  else if(step==="id") footer=`<button class="btn btn-coral" onclick="submitVerification()">📸 Scan ID & submit</button>`;
+  else if(step==="details") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="saveDetails()">Continue</button>`;
+  else if(step==="game") footer="";
+  else footer=`<button class="btn btn-coral" onclick="obNext()">Continue</button>`;
+
+  return `
+    <div class="appbar"><button class="back" onclick="obBack()">‹</button>
+      <div class="script">Yumble</div><div class="spacer"></div>
+      <span style="font-size:12px;font-weight:700;opacity:.85">${state.step+1}/${OB_STEPS.length-1}</span></div>
+    <div style="padding:0 22px"><div class="prog dark" style="margin:16px 0 4px"><i style="width:${pct}%"></i></div></div>
+    <div class="scroll pad">${inner}</div>
+    ${footer?`<div class="pad" style="padding-top:0">${footer}</div>`:""}`;
+});
+routes.onboard.after=(el)=>{ if(OB_STEPS[state.step]==="game") renderGame(); if(OB_STEPS[state.step]==="details") checkDetails(); };
+
+/* onboarding validation + helpers */
+function checkDetails(){
+  const n=document.getElementById("f_name")?.value.trim();
+  const dob=document.getElementById("f_dob")?.value;
+  const g=document.getElementById("f_gender")?.value;
+  const l=document.getElementById("f_looking")?.value;
+  const loc=document.getElementById("f_loc")?.value.trim();
+  let over18=false;
+  if(dob){const d=new Date(dob);const age=(Date.now()-d)/(365.25*24*3600*1000);over18=age>=18;const err=document.getElementById("ageErr");if(err)err.style.display=(dob&&!over18)?"block":"none";}
+  const ok=n&&dob&&over18&&g&&l&&loc;
+  const btn=document.getElementById("obBtn");if(btn){btn.disabled=!ok;btn.style.opacity=ok?1:.5;}
+}
+function saveDetails(){
+  me.name=document.getElementById("f_name").value.trim()||"You";
+  me.gender=document.getElementById("f_gender").value;
+  me.lookingFor=document.getElementById("f_looking").value;
+  const dob=document.getElementById("f_dob").value;if(dob)me.age=Math.floor((Date.now()-new Date(dob))/(365.25*24*3600*1000));
+  obNext();
+}
+function checkTerms(){
+  const all=["t_age","t_terms","t_gdpr","t_comm"].every(id=>document.getElementById(id)?.checked);
+  const btn=document.getElementById("obBtn");if(btn){btn.disabled=!all;btn.style.opacity=all?1:.5;}
+  me.agreedTerms=all;
+}
+function otpInput(el){const i=+el.dataset.i;if(el.value&&i<5){document.querySelector(`.otp-box[data-i="${i+1}"]`)?.focus();}}
+function verifyOtp(){
+  const code=[...document.querySelectorAll(".otp-box")].map(b=>b.value).join("");
+  if(code.length<6){toast("Enter the 6-digit code");return;}
+  toast("Number verified ✓");obNext();
+}
+function addPhoto(i){toast("Photo added (demo)");}
+function submitVerification(){
+  me.accountStatus="pending";
+  go("onboard"); // shows submitting spinner
+  state.step=OB_STEPS.indexOf("submitting");go("onboard");
+  setTimeout(()=>{go("verifyPending");},2200);
+}
+
+/* ---------- THIS-OR-THAT TASTE GAME ---------- */
+const GAME_Q=[
+  {axis:"dining", a:{t:"Cosy home cooking",e:"🏠",v:0}, b:{t:"Try a new restaurant",e:"🍽️",v:3}},
+  {axis:"spice",  a:{t:"Keep it mild",e:"🥛",v:0}, b:{t:"Bring the heat",e:"🌶️",v:3}},
+  {axis:"adventure", a:{t:"My usual favourite",e:"🍝",v:0}, b:{t:"Something I've never had",e:"🐙",v:3}},
+  {axis:"sweet",  a:{t:"Skip to the cheese board",e:"🧀",v:0}, b:{t:"Always order dessert",e:"🍰",v:3}},
+  {axis:"dining", a:{t:"Street food & small plates",e:"🌮",v:1}, b:{t:"Tasting menu night",e:"🍾",v:3}}
+];
+let gameIdx=0, gameAcc={};
+function renderGame(){
+  gameIdx=0; gameAcc={spice:[],adventure:[],sweet:[],dining:[]};
+  paintGameQ();
+}
+function paintGameQ(){
+  const area=$("#gameArea"); if(!area)return;
+  if(gameIdx>=GAME_Q.length){
+    // finalise taste
+    ["spice","adventure","sweet","dining"].forEach(k=>{
+      const arr=gameAcc[k]; if(arr.length)me.taste[k]=Math.round(arr.reduce((x,y)=>x+y,0)/arr.length);
+    });
+    me.foodieType = me.taste.adventure>=2.5?"Adventurer":me.taste.sweet>=2.5?"Sweet tooth":me.taste.dining>=2.5?"Restaurant explorer":me.taste.spice>=2.5?"Heat seeker":"Comfort seeker";
+    if(me.taste.spice>=3)awardBadge("spicy");
+    area.innerHTML=`
+      <div class="center" style="padding:10px 0">
+        <div style="font-size:52px;margin-bottom:8px">${FOODIE_TYPES[me.foodieType]||"🍴"}</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--slate)">YOUR FOODIE TYPE</div>
+        <h2 style="font-size:26px;font-weight:800;color:var(--red);margin:4px 0 14px">${me.foodieType}</h2>
+        ${tasteBars(me.taste)}
+        <button class="btn btn-coral" style="margin-top:22px" onclick="obNext()">Looks right →</button>
+        <button class="link" style="margin-top:12px;color:var(--slate)" onclick="renderGame()">Retake</button>
+      </div>`;
+    return;
+  }
+  const q=GAME_Q[gameIdx];
+  area.innerHTML=`
+    <div style="text-align:center;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:14px">${gameIdx+1} of ${GAME_Q.length}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${[q.a,q.b].map((o,i)=>`
+        <button onclick="pickGame(${o.v},'${q.axis}')" style="border:2px solid var(--line);background:#fff;border-radius:20px;padding:26px 14px;cursor:pointer;transition:transform .1s;display:flex;flex-direction:column;align-items:center;gap:12px" onmousedown="this.style.transform='scale(.96)'" onmouseup="this.style.transform=''">
+          <span style="font-size:46px">${o.e}</span>
+          <span style="font-weight:700;font-size:14px;color:var(--ink);line-height:1.3">${o.t}</span>
+        </button>`).join("")}
+    </div>
+    <p class="h-sub" style="text-align:center;margin-top:18px">Tap the one that's more <b>you</b></p>`;
+}
+function pickGame(v,axis){gameAcc[axis].push(v);gameIdx++;paintGameQ();}
+function tasteBars(t){
+  const rows=[["🌶️","Spice",t.spice],["🌍","Adventure",t.adventure],["🍰","Sweet tooth",t.sweet],["🍽️","Dining out",t.dining]];
+  return `<div style="width:100%;max-width:300px;text-align:left">${rows.map(([e,l,v])=>`
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:4px"><span>${e} ${l}</span></div>
+      <div style="height:8px;background:var(--mist);border-radius:4px;overflow:hidden"><div style="height:100%;width:${(v/3)*100}%;background:linear-gradient(90deg,var(--coral),var(--red));border-radius:4px"></div></div>
+    </div>`).join("")}</div>`;
+}
+
+function toggleCui(el,c){el.classList.toggle("on");const i=state.selCuisines.indexOf(c);if(i<0)state.selCuisines.push(c);else state.selCuisines.splice(i,1);me.cuisines=state.selCuisines;}
+function toggleDiet(el,d){el.classList.toggle("on");const i=state.selDiets.indexOf(d);if(i<0)state.selDiets.push(d);else state.selDiets.splice(i,1);me.diets=state.selDiets;}
+
+/* =========================================================
+   MAIN APP SHELL + TABS
+   ========================================================= */
+function enterApp(){
+  // gate on verification status
+  if(me.accountStatus==="pending"){go("verifyPending");return;}
+  state.tab="discover";go("app");setTimeout(askNotifications,900);
+}
+/* ---------- VERIFICATION PENDING (awaiting admin approval) ---------- */
+route("verifyPending",()=>`
+  <div class="scroll red-bg center" style="padding:40px 30px;color:#fff">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <div class="cooking-pot">
+        <div class="pot-steam"><span></span><span></span><span></span></div>
+        <div class="pot">🍳</div>
+      </div>
+      <div class="script" style="font-size:38px;margin-top:10px">Your sign-up<br>is cooking…</div>
+      <p style="opacity:.92;font-size:15px;margin-top:16px;max-width:320px;line-height:1.6">Hang tight ${me.name}! Our team is checking your selfie and ID to keep Yumble safe and genuine. We're just adding the finishing touches — this usually takes a few hours.</p>
+      <div style="background:rgba(255,255,255,.12);border-radius:16px;padding:16px 18px;margin-top:24px;max-width:320px;text-align:left;font-size:13.5px;line-height:1.7">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span style="color:#5EEAD4">✓</span> Selfie added to the pot</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span style="color:#5EEAD4">✓</span> ID added to the pot</div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="mini-spin"></span> Foodies is giving it a taste…</div>
+      </div>
+      <p style="opacity:.8;font-size:13px;margin-top:22px">🔔 We'll ping you the second you're served.</p>
+    </div>
+    <button class="btn btn-white" onclick="notify('Still cooking 🍳','We\\'ll let you know the moment you\\'re approved');go('welcome')">Got it — I'll wait</button>
+    <button class="link" style="color:#fff;margin-top:14px;opacity:.85" onclick="simulateApproval()">▶ Demo: simulate admin approval</button>
+  </div>`);
+routes.verifyPending.red=true;
+function simulateApproval(){
+  me.accountStatus="approved";
+  if(!me.badges)me.badges=[];if(!me.badges.includes("verified"))me.badges.push("verified");
+  state.verified=true;
+  notify("You're approved! 🎉","Welcome to Yumble — start finding your matches");
+  go("approved");
+}
+route("approved",()=>`
+  <div class="scroll red-bg center" style="padding:40px 30px;color:#fff">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <div style="width:86px;height:86px;border-radius:50%;background:#fff;color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:var(--shadow-lg)">✓</div>
+      <h1 class="big" style="color:#fff;margin-top:22px">You're verified! 🎉</h1>
+      <p style="opacity:.92;font-size:15px;margin-top:10px;max-width:300px">Your profile has a blue tick. Time to find your Foodie.</p>
+    </div>
+    <button class="btn btn-white" onclick="me.accountStatus='approved';state.tab='discover';go('app');">Start swiping →</button>
+  </div>`);
+routes.approved.red=true;
+
+route("app",()=>{
+  return `
+    <div id="tabContent" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+    <div class="tabbar" id="tabbar">
+      <button data-tab="discover" onclick="switchTab('discover')">🔥<span>Discover</span></button>
+      <button data-tab="explore" onclick="switchTab('explore')">🍽️<span>Venues</span></button>
+      <button data-tab="matches" onclick="switchTab('matches')">💘<span>Matches</span></button>
+      <button data-tab="chats" onclick="switchTab('chats')">💬<span>Chats</span></button>
+      <button data-tab="profile" onclick="switchTab('profile')">👤<span>Profile</span></button>
+    </div>`;
+});
+routes.app.after=()=>{switchTab(state.tab);};
+
+function switchTab(tab){
+  state.tab=tab;
+  document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  const c=$("#tabContent");if(!c)return;
+  if(tab==="discover")c.innerHTML=tabDiscover();
+  if(tab==="explore"){c.innerHTML=tabExplore();renderExploreBody();}
+  if(tab==="groups")c.innerHTML=tabGroups();
+  if(tab==="tonight")c.innerHTML=tabTonight();
+  if(tab==="events")c.innerHTML=tabEvents();
+  if(tab==="matches")c.innerHTML=tabMatches();
+  if(tab==="chats")c.innerHTML=tabChats();
+  if(tab==="profile")c.innerHTML=tabProfile();
+  if(tab==="discover")initDeck();
+  updateNavBadges();
+}
+function updateNavBadges(){
+  const set=(tab,n)=>{const btn=document.querySelector(`#tabbar [data-tab="${tab}"]`);if(!btn)return;let d=btn.querySelector(".dot");if(n>0){if(!d){d=document.createElement("span");d.className="dot";btn.appendChild(d);}d.textContent=n;}else if(d)d.remove();};
+  // matches badge = mutual matches not yet chatted + people who like you
+  const newMatches=state.matches.filter(m=>!state.threads[m.id]).length;
+  set("matches", newMatches + state.likedMe.filter(id=>!state.matches.find(m=>m.id===id)).length);
+  const unreadChats=state.matches.filter(m=>state.threads[m.id]&&state.threads[m.id].some(x=>x.unread)).length;
+  set("chats", unreadChats);
+}
+
+/* ---------- DISCOVER (swipe deck) ---------- */
+function tabDiscover(){
+  return `
+    <div class="feed-topbar">
+      <div class="script" style="font-size:22px">Yumble</div><div style="flex:1"></div>
+      <button class="feed-top-btn" onclick="switchTab('tonight')" title="Eat Tonight">🟢</button>
+      <button class="feed-top-btn" onclick="openPassport()" title="Passport">🎫</button>
+    </div>
+    <div id="feed" class="feed"></div>`;
+}
+function initDeck(){
+  const feed=$("#feed");if(!feed)return;
+  const list=FOODIES.filter(f=>!state.liked.includes(f.id)&&!state.passed.includes(f.id));
+  if(list.length===0){
+    feed.innerHTML=`<div class="feed-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;background:linear-gradient(160deg,var(--red),var(--red-deep))">
+      <div style="font-size:48px;margin-bottom:14px">🍽️</div><b style="font-size:19px">That's everyone nearby</b>
+      <p style="margin-top:8px;opacity:.85">New Foodies join every day — check back soon.</p>
+      <button class="btn btn-white btn-sm" style="margin-top:18px;width:auto" onclick="resetDeck()">Start over</button></div>`;
+    return;
+  }
+  feed.innerHTML=list.map(f=>feedCard(f)).join("");
+}
+function feedCard(f){
+  const sh=shared(me.cuisines,f.cuisines);
+  const fm=flavourMatch(f);
+  return `
+  <div class="feed-item" data-id="${f.id}">
+    <img class="feed-bg" src="${f.img}" alt="${f.name}">
+    <div class="feed-veil"></div>
+    ${f.tonight?`<div class="tonight-badge" style="top:14px;left:14px">🟢 Free tonight</div>`:""}
+    <div class="feed-rail">
+      <button class="rail-btn pass" onclick="feedAction(${f.id},'pass')">✕<span>Pass</span></button>
+      <button class="rail-btn like" onclick="feedAction(${f.id},'like')"><div class="rail-heart">♥</div><span>Like</span></button>
+      <button class="rail-btn super" onclick="feedAction(${f.id},'super')">★<span>Super</span></button>
+      <button class="rail-btn info" onclick="openFoodie(${f.id})">ⓘ<span>More</span></button>
+      <div class="rail-fm"><div class="fmring" style="--p:${fm}"><span>${fm}<small>%</small></div></div>
+    </div>
+    <div class="feed-info">
+      <div class="feed-name">${f.name}, ${f.age} ${f.verified?'<span class="vf">✓</span>':''}</div>
+      <div class="feed-meta">📍 ${f.dist} · ${FOODIE_TYPES[f.foodieType]||"🍴"} ${f.foodieType}</div>
+      <div class="feed-prompt"><b>${f.prompt.q}</b> ${f.prompt.a}</div>
+      <div class="feed-cui">${f.cuisines.map(c=>`<span class="${sh.includes(c)?'shared':''}">${c}</span>`).join("")}</div>
+    </div>
+  </div>`;
+}
+function feedAction(id,action){
+  const f=FOODIES.find(x=>x.id===id);if(!f)return;
+  const item=document.querySelector(`.feed-item[data-id="${id}"]`);
+  if(action==="pass"){state.passed.push(id);if(item){item.classList.add("fly-left");}}
+  else{ // like or super
+    if(!state.liked.includes(id))state.liked.push(id);
+    if(item){item.classList.add(action==="super"?"fly-up":"fly-right");
+      // heart burst
+      const burst=document.createElement("div");burst.className="heart-burst";burst.textContent="♥";item.appendChild(burst);}
+    const sh=shared(me.cuisines,f.cuisines);
+    if(sh.length>=2){if(!state.matches.find(m=>m.id===f.id))state.matches.unshift(f);setTimeout(()=>{showMatch(f);awardBadge("firstmatch");notify("It's a Match! 🎉",`You and ${f.name} both love ${sh.join(" & ")}. Say hello!`);},450);}
+    else toast(action==="super"?"Super like sent ★":"Liked ♥");
+  }
+  updateNavBadges();
+  setTimeout(()=>{if(item){item.remove();}const feed=$("#feed");if(feed&&!feed.querySelector(".feed-item"))initDeck();},430);
+}
+function rewind(){toast("Scroll up to revisit 👆");}
+function resetDeck(){state.passed=[];state.liked=[];initDeck();}
+
+/* ---------- MATCH overlay ---------- */
+function showMatch(f){
+  let ov=$("#matchOverlay");if(ov)ov.remove();
+  ov=document.createElement("div");ov.id="matchOverlay";ov.className="show";
+  const venues=bestVenuesFor(f);
+  ov.innerHTML=`
+    ${Array.from({length:18}).map(()=>{const c=['#fff','#F6D488','#F79A9A','#12B5A5'][Math.floor(Math.random()*4)];return `<span class="confetti" style="left:${Math.random()*100}%;background:${c};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()}s"></span>`}).join("")}
+    <div class="script" style="font-size:40px;color:#fff">It's a Match!</div>
+    <p style="opacity:.9;margin-top:6px;font-size:14px">You and ${f.name} both love ${shared(me.cuisines,f.cuisines).join(" & ")}</p>
+    <div class="match-photos">
+      <img class="mp" src="img/p6.jpg">
+      <img class="mp" src="${f.img}">
+    </div>
+    <div style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:14px 16px;width:100%;max-width:320px;text-align:left">
+      <p style="font-size:11px;letter-spacing:1px;font-weight:700;opacity:.85;margin-bottom:8px">🍽️ WE SUGGEST — WORKS FOR YOU BOTH</p>
+      <div style="display:flex;gap:11px;align-items:center">
+        <img src="${venues[0].img}" style="width:52px;height:52px;border-radius:11px;object-fit:cover">
+        <div><b style="font-size:14px">${venues[0].name}</b><div style="font-size:11.5px;opacity:.85">${venues[0].cuisines.slice(0,2).join(", ")} · ${venues[0].dist}${venues[0].offer?" · 🎁 offer":""}</div></div>
+      </div>
+    </div>
+    <button class="btn btn-white" style="max-width:320px;margin-top:22px" onclick="closeMatch(${f.id})">Send a message</button>
+    <button class="link" style="color:#fff;margin-top:16px" onclick="dismissMatch()">Keep swiping</button>`;
+  $("#device").appendChild(ov);
+}
+function dismissMatch(){const ov=$("#matchOverlay");if(ov){ov.classList.remove("show");setTimeout(()=>ov.remove(),300);}}
+function closeMatch(id){dismissMatch();openChat(id);}
+
+/* ---------- venue matching logic (signature) ---------- */
+function bestVenuesFor(f){
+  const wantCui=[...new Set([...shared(me.cuisines,f.cuisines),...me.cuisines])];
+  const wantDiet=me.diets;
+  return [...VENUES].map(v=>{
+    let score=0;
+    v.cuisines.forEach(c=>{if(wantCui.includes(c))score+=wantCui.includes(c)&&shared(me.cuisines,f.cuisines).includes(c)?3:1;});
+    if(wantDiet.every(d=>v.diets.includes(d)))score+=2;
+    if(v.offer)score+=1;
+    return {...v,score};
+  }).sort((a,b)=>b.score-a.score);
+}
+
+/* ---------- EXPLORE (venues) ---------- */
+function tabExplore(){
+  return `
+    <div class="appbar"><div class="script" style="font-size:24px">Explore venues</div><div class="spacer"></div>
+      <span style="font-size:12px;opacity:.85">${VENUES.length} in London</span></div>
+    <div class="searchwrap">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="switchTab('groups')" class="hub-btn">👥<span>Meet-ups</span></button>
+        <button onclick="go('recommend')" class="hub-btn">➕<span>Recommend</span></button>
+      </div>
+      <div class="searchbar">
+        <span style="font-size:16px">📍</span>
+        <input id="pcInput" placeholder="Search postcode or area (e.g. E1, Soho)" onkeydown="if(event.key==='Enter')runSearch()">
+        <button onclick="runSearch()" class="sbtn">Search</button>
+      </div>
+      <div class="radius-row">
+        <span style="font-size:12px;font-weight:700;color:var(--slate);white-space:nowrap">Within <b id="radLbl" style="color:var(--red)">${state.radius} mi</b></span>
+        <input type="range" min="1" max="15" value="${state.radius}" id="radius" oninput="setRadius(this.value)" style="flex:1">
+      </div>
+      <div class="chips" id="exploreFilters" style="margin-top:4px">
+        <button class="chip ${state.exFilter==='all'?'on':''}" onclick="setExFilter('all')">All</button>
+        <button class="chip ${state.exFilter==='offers'?'on':''}" onclick="setExFilter('offers')">🎁 Offers</button>
+        <button class="chip ${state.exFilter==='forme'?'on':''}" onclick="setExFilter('forme')">For my taste</button>
+        ${me.diets.map(d=>`<button class="chip diet ${state.exDiets.includes(d)?'on':''}" onclick="toggleExDiet('${d}')">${d}</button>`).join("")}
+      </div>
+      <div class="pill-toggle" style="margin:12px 0 0">
+        <button class="${state.exView==='list'?'on':''}" onclick="setExView('list')">List</button>
+        <button class="${state.exView==='map'?'on':''}" onclick="setExView('map')">Map</button>
+      </div>
+    </div>
+    <div class="scroll pad" id="exploreBody" style="padding-top:12px"></div>`;
+}
+
+function filteredVenues(){
+  const c=state.searchCentre||MY_LOC;
+  let list=VENUES.map(v=>({...v,d:haversineMi(c,{lat:v.lat,lng:v.lng})}));
+  list=list.filter(v=>v.d<=state.radius);
+  if(state.exFilter==='offers')list=list.filter(v=>v.offer);
+  if(state.exFilter==='forme')list=list.filter(v=>shared(me.cuisines,v.cuisines).length>0);
+  if(state.exDiets.length)list=list.filter(v=>state.exDiets.every(d=>v.diets.includes(d)));
+  list.sort((a,b)=>{
+    if(state.exFilter==='forme')return shared(me.cuisines,b.cuisines).length-shared(me.cuisines,a.cuisines).length||a.d-b.d;
+    return a.d-b.d;
+  });
+  return list;
+}
+function renderExploreBody(){
+  const body=$("#exploreBody");if(!body)return;
+  const list=filteredVenues();
+  const where=state.searchLabel?`near <b>${state.searchLabel}</b>`:`near you`;
+  if(state.exView==='map'){body.innerHTML=renderMap(list);return;}
+  if(list.length===0){body.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--slate)"><div style="font-size:38px;margin-bottom:10px">🔍</div><b style="color:var(--ink)">No venues in range</b><p style="margin-top:6px;font-size:13px">Try widening the radius or clearing filters.</p></div>`;return;}
+  body.innerHTML=`<p class="h-sub" style="margin:-4px 0 14px">${list.length} ${list.length===1?'venue':'venues'} ${where}, closest first.</p>`+list.map(v=>venueCard(v)).join("");
+}
+function venueCard(v){
+  const sh=shared([...me.cuisines],v.cuisines);
+  const dist=(v.d!=null?v.d.toFixed(1):v.distMi.toFixed(1))+" mi";
+  return `<div class="vcard" onclick="openVenue(${v.id})">
+    <img src="${v.img}">
+    <div class="vc">
+      <div class="vn">${v.name}</div>
+      <div class="vsub"><span>⭐ ${v.rating}</span><span>📍 ${v.area.replace(', London','')}</span><span>${dist}</span><span>${v.price}</span></div>
+      <div class="rowb">${v.offer?`<span class="offer">🎁 ${v.offer}</span>`:''}${v.cuisines.slice(0,2).map(c=>`<span class="chip-static ${sh.includes(c)?'teal':''}">${c}</span>`).join("")}</div>
+    </div></div>`;
+}
+// simple schematic map (no external tiles — self-contained)
+function renderMap(list){
+  const c=state.searchCentre||MY_LOC;
+  // project lat/lng to a local box
+  const pad=0.02;
+  const lats=list.map(v=>v.lat).concat(c.lat),lngs=list.map(v=>v.lng).concat(c.lng);
+  const minLat=Math.min(...lats)-pad,maxLat=Math.max(...lats)+pad,minLng=Math.min(...lngs)-pad,maxLng=Math.max(...lngs)+pad;
+  const X=lng=>((lng-minLng)/(maxLng-minLng))*100;
+  const Y=lat=>(1-(lat-minLat)/(maxLat-minLat))*100;
+  const pins=list.map(v=>`<button class="pin" style="left:${X(v.lng)}%;top:${Y(v.lat)}%" onclick="openVenue(${v.id})" title="${v.name}">
+     <span class="pindot">${v.offer?'🎁':'🍽️'}</span><span class="pinlbl">${v.name.split(' ')[0]}</span></button>`).join("");
+  return `
+    <div class="mapbox">
+      <div class="mapgrid"></div>
+      <div class="pin me" style="left:${X(c.lng)}%;top:${Y(c.lat)}%"><span class="pindot" style="background:var(--ink)">📍</span></div>
+      ${pins}
+    </div>
+    <p class="h-sub" style="margin-top:12px;text-align:center">${list.length} venues shown · tap a pin to view. <br><span style="opacity:.7">Schematic map — live maps come with the full build.</span></p>`;
+}
+
+function runSearch(){
+  const raw=($("#pcInput")?.value||"").trim().toUpperCase();
+  if(!raw){state.searchCentre=null;state.searchLabel=null;renderExploreBody();return;}
+  // try postcode district match, then area-name match
+  const cent=window.POSTCODE_CENTROIDS;
+  let key=Object.keys(cent).find(k=>raw.replace(/\s/g,'').startsWith(k)&&k!=="LONDON");
+  if(key){state.searchCentre={lat:cent[key][0],lng:cent[key][1]};state.searchLabel=key;}
+  else{
+    const v=VENUES.find(x=>x.area.toUpperCase().includes(raw)||x.postcode.toUpperCase().startsWith(raw));
+    if(v){state.searchCentre={lat:v.lat,lng:v.lng};state.searchLabel=v.area.replace(', London','');}
+    else{toast("Try a London postcode like E1 or an area like Soho");return;}
+  }
+  renderExploreBody();
+  toast("Showing venues near "+state.searchLabel);
+}
+function setRadius(v){state.radius=+v;const l=$("#radLbl");if(l)l.textContent=v+" mi";renderExploreBody();}
+function setExFilter(f){state.exFilter=f;document.querySelectorAll("#exploreFilters .chip").forEach(b=>{});switchTab('explore');}
+function toggleExDiet(d){const i=state.exDiets.indexOf(d);if(i<0)state.exDiets.push(d);else state.exDiets.splice(i,1);switchTab('explore');}
+function setExView(v){state.exView=v;switchTab('explore');}
+
+/* ---------- GROUP MEET-UPS ---------- */
+const GROUPS = [
+  {id:1,title:"Ramen crawl through Soho",venueId:6,host:"Priya",when:"Fri · 7:30pm",spots:6,going:4,vibe:"Casual",cuisine:"Japanese",attendees:[2,5,3]},
+  {id:2,title:"Sunday mezze & shisha",venueId:5,host:"Leila",when:"Sun · 2:00pm",spots:8,going:5,vibe:"Relaxed",cuisine:"Lebanese",attendees:[4,1,5]},
+  {id:3,title:"Taco Tuesday, new in town welcome",venueId:18,host:"Amara",when:"Tue · 8:00pm",spots:10,going:7,vibe:"Lively",cuisine:"Mexican",attendees:[1,3,2]},
+  {id:4,title:"Vegan brunch club",venueId:22,host:"Chloé",when:"Sat · 11:00am",spots:6,going:3,vibe:"Chilled",cuisine:"Plant-based",attendees:[5,4]}
+];
+function tabGroups(){
+  return `
+    <div class="appbar"><div class="script" style="font-size:24px">Meet-ups</div><div class="spacer"></div>
+      <button class="back" onclick="toast('Host a meet-up — demo')">＋</button></div>
+    <div class="scroll pad">
+      <div style="background:linear-gradient(135deg,var(--red),var(--red-deep));border-radius:18px;padding:18px;color:#fff;margin-bottom:16px">
+        <b style="font-size:16px">Not just 1-on-1 🍜</b>
+        <p style="font-size:13px;opacity:.92;margin-top:5px;line-height:1.5">Join a table of fellow Foodies. Great for new friends, low pressure, and always good food. Everyone's verified.</p>
+      </div>
+      ${GROUPS.map(g=>groupCard(g)).join("")}
+    </div>`;
+}
+function groupCard(g){
+  const v=VENUES.find(x=>x.id===g.venueId);
+  const joined=state.groups.includes(g.id);
+  const going=g.going+(joined?1:0);
+  return `<div class="gcard">
+    <div class="gtop" style="background:url('${v.img}') center/cover">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent)"></div>
+      <div class="gv" style="position:relative">${g.title}</div>
+    </div>
+    <div class="gbody">
+      <div class="gmeta"><span>📍 ${v.name}, ${v.area.replace(', London','')}</span></div>
+      <div class="gmeta"><span>🗓️ ${g.when}</span><span>🍽️ ${g.cuisine}</span><span>✨ ${g.vibe}</span></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+        <div class="avstack">
+          ${g.attendees.map(id=>{const f=FOODIES.find(x=>x.id===id);return `<img src="${f.img}">`}).join("")}
+          <div class="more">+${Math.max(0,going-g.attendees.length)}</div>
+        </div>
+        <span style="font-size:12px;color:var(--slate)">${going}/${g.spots} going · hosted by ${g.host}</span>
+        <button class="btn ${joined?'btn-dark':'btn-coral'} btn-sm" style="margin-left:auto" onclick="toggleGroup(${g.id})">${joined?'Going ✓':'Join'}</button>
+      </div>
+    </div></div>`;
+}
+function toggleGroup(id){
+  const i=state.groups.indexOf(id);
+  if(i<0){state.groups.push(id);awardBadge("social");const g=GROUPS.find(x=>x.id===id);toast("You're going 🎉");notify("You joined a meet-up 🍜",g.title+" · "+g.when);}
+  else{state.groups.splice(i,1);toast("Left the meet-up");}
+  switchTab('groups');
+}
+
+/* ---------- MATCHES ---------- */
+function tabMatches(){
+  const matched=state.matches;
+  const likesYou=state.likedMe.map(id=>FOODIES.find(f=>f.id===id)).filter(f=>f&&!matched.find(m=>m.id===f.id));
+  const youLiked=state.liked.map(id=>FOODIES.find(f=>f.id===id)).filter(f=>f&&!matched.find(m=>m.id===f.id));
+  const tile=(f,tag,locked)=>`
+    <div style="position:relative;cursor:pointer" onclick="${locked?`toast('Go Gold to see who likes you 👑')`:`openFoodie(${f.id})`}">
+      <img src="${f.img}" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:16px;${locked?'filter:blur(8px)':''}">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent 50%);border-radius:16px"></div>
+      ${!locked?`<div style="position:absolute;bottom:8px;left:10px;color:#fff"><b style="font-size:14px">${f.name}, ${f.age}</b><div style="font-size:11px;opacity:.9">${flavourMatch(f)}% match</div></div>`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px">👑</div>'}
+      ${tag?`<div style="position:absolute;top:8px;right:8px;background:${tag.c};color:#fff;font-size:9.5px;font-weight:800;padding:3px 7px;border-radius:6px">${tag.t}</div>`:''}
+    </div>`;
+  const grid=(arr,tag,locked)=>`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">${arr.map(f=>tile(f,tag,locked)).join("")}</div>`;
+  return `
+    <div class="appbar"><div class="script" style="font-size:24px">My Yumble</div></div>
+    <div class="scroll pad">
+      <div class="shead"><h3>Matched · ${matched.length}</h3></div>
+      ${matched.length?grid(matched,{t:"MATCH",c:"var(--teal)"},false):'<p class="h-sub" style="margin-bottom:16px">No matches yet — start swiping in Discover.</p>'}
+      <div class="divide"></div>
+      <div class="shead"><h3>Likes you · ${state.likedMe.length}</h3>${state.tier!=='gold'?'<span class="more" onclick="go(\'plans\')">Unlock 👑</span>':''}</div>
+      <p class="h-sub" style="margin:-4px 0 12px">${state.tier==='gold'?'These Foodies have liked you — like back to match.':'Go Gold to see who already likes you.'}</p>
+      ${likesYou.length?grid(likesYou,{t:"LIKES YOU",c:"var(--coral)"},state.tier!=='gold'):'<p class="h-sub">Nobody yet — but your Taste Profile is attracting attention 😋</p>'}
+      <div class="divide"></div>
+      <div class="shead"><h3>You liked · ${youLiked.length}</h3></div>
+      ${youLiked.length?grid(youLiked,null,false):'<p class="h-sub">People you like will show here while you wait for them to like back.</p>'}
+    </div>`;
+}
+
+/* ---------- CHATS ---------- */
+function tabChats(){
+  const list=state.matches;
+  const newMatches=list.filter(m=>!state.threads[m.id]);
+  return `
+    <div class="appbar"><div class="script" style="font-size:24px">Foodie chats</div></div>
+    <div class="scroll pad">
+      <div class="shead"><h3>New matches</h3></div>
+      <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">
+        ${list.map(m=>`<div style="text-align:center;cursor:pointer;flex-shrink:0" onclick="openChat(${m.id})">
+          <img src="${m.img}" style="width:66px;height:66px;border-radius:50%;object-fit:cover;border:3px solid ${state.threads[m.id]&&state.threads[m.id].length>3?'transparent':'var(--coral)'}">
+          <div style="font-size:11.5px;font-weight:600;margin-top:5px">${m.name}</div></div>`).join("")}
+      </div>
+      <div class="divide"></div>
+      <div class="shead"><h3>Messages</h3></div>
+      ${list.filter(m=>state.threads[m.id]).map(m=>{
+        const t=state.threads[m.id];const last=t[t.length-1];
+        return `<div class="crow" onclick="openChat(${m.id})">
+          <img src="${m.img}">
+          <div class="ci"><div class="cn">${m.name} <small>now</small></div>
+          <div class="cm">${last.venue?"🍽️ Shared a venue":(last.who==='me'?'You: ':'')+last.text}</div></div>
+        </div>`;
+      }).join("")||'<p class="h-sub">Match with someone to start chatting.</p>'}
+    </div>`;
+}
+
+/* ---------- CHAT THREAD ---------- */
+function openChat(id){state.activeChat=id;go("chat",{id});}
+route("chat",({id})=>{
+  const f=FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id);
+  const sh=shared(me.cuisines,f.cuisines);
+  if(!state.threads[id])state.threads[id]=[];
+  const ices=[
+    `Omakase or ramen? 🍜`,`Best ${sh[0]||'dinner'} spot you know?`,`Free this Friday? 🍷`,`Sweet or savoury person?`
+  ];
+  return `
+    <div class="appbar"><button class="back" onclick="enterApp()">‹</button>
+      <img src="${f.img}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">
+      <div><div style="font-size:16px;font-weight:800;line-height:1.1">${f.name}</div><div style="font-size:11px;opacity:.85">● Online</div></div>
+      <div class="spacer"></div>
+      <button class="back" onclick="startCall(${id})" title="Video date">📹</button>
+      <button class="back" onclick="openSafety(${id})" title="Safety">🛡️</button>
+      <button class="back" onclick="toast('Block / report — demo')">⋯</button></div>
+    <div style="background:#F0FBFA;border-bottom:1px solid #D8F0EC;padding:9px 16px;font-size:12px;color:#0C8073;display:flex;align-items:center;gap:8px">
+      🍽️ You both love <b>${sh.join(" & ")||f.cuisines[0]}</b> · <button class="link" style="color:#0C8073;font-weight:700" onclick="startDateDeck(${id})">pick a venue together</button></div>
+    <div style="background:#FFF6ED;border-bottom:1px solid #F5E4CE;padding:8px 16px;font-size:12px;color:#9A6A1E;display:flex;align-items:center;gap:8px">
+      🍰 Been on your date? <button class="link" style="color:#9A6A1E;font-weight:700" onclick="openDessert(${id})">rate it &amp; order dessert</button></div>
+    <div id="thread"></div>
+    <div class="ice">${ices.map(i=>`<button onclick="quickSend(${id},'${i.replace(/'/g,"")}')">${i}</button>`).join("")}</div>
+    <div class="composer">
+      <button class="share" onclick="openShare(${id})">🍽️</button>
+      <input id="msgInput" placeholder="Message ${f.name}…" onkeydown="if(event.key==='Enter')sendMsg(${id})">
+      <button class="send" onclick="sendMsg(${id})">➤</button>
+    </div>`;
+});
+routes.chat.after=(el,{id})=>{renderThread(id);};
+function renderThread(id){
+  const th=$("#thread");if(!th)return;
+  th.innerHTML=state.threads[id].map(m=>{
+    if(m.venue){const v=m.venue;return `<div class="bub venue"><img src="${v.img}"><div class="vb"><b>${v.name}</b><p>${v.cuisines.slice(0,2).join(", ")} · ${v.dist} · ${v.rating}⭐</p><button class="btn btn-coral btn-sm" style="width:100%" onclick="openVenue(${v.id})">Book a table</button></div></div>`;}
+    return `<div class="bub ${m.who}">${m.text}</div>`;
+  }).join("");
+  th.scrollTop=th.scrollHeight;
+}
+function sendMsg(id){const inp=$("#msgInput");const v=inp.value.trim();if(!v)return;state.threads[id].push({who:"me",text:v});inp.value="";renderThread(id);replyLater(id);}
+function quickSend(id,txt){state.threads[id].push({who:"me",text:txt});renderThread(id);replyLater(id);}
+function replyLater(id){
+  const th=$("#thread");const typ=document.createElement("div");typ.className="typing";typ.innerHTML="<i></i><i></i><i></i>";th.appendChild(typ);th.scrollTop=th.scrollHeight;
+  const replies=["Ooh good question 😄","Yes! Let's do it.","I know the perfect place actually…","You had me at dessert."];
+  setTimeout(()=>{typ.remove();const rep=replies[Math.floor(Math.random()*replies.length)];state.threads[id].push({who:"them",text:rep});renderThread(id);const f=FOODIES.find(x=>x.id===id);if(current!=="chat"||state.activeChat!==id)notify(`${f?f.name:"Foodie"} sent a message`,rep);},1400);
+}
+
+/* ---------- SHARE VENUE in chat ---------- */
+function openShare(id){go("share",{id});}
+route("share",({id})=>{
+  const f=FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id);
+  const venues=bestVenuesFor(f);
+  return `
+    <div class="appbar"><button class="back" onclick="openChat(${id})">‹</button>
+      <div class="script" style="font-size:20px">Suggest to ${f.name}</div></div>
+    <div style="padding:12px 16px 0"><p class="h-sub">Best for you both — ranked by shared taste${me.diets.length?", "+me.diets[0].toLowerCase()+"-friendly":""} and live offers.</p></div>
+    <div class="scroll pad" style="padding-top:12px">
+      ${venues.map(v=>`<div class="vcard" style="align-items:center">
+        <img src="${v.img}">
+        <div class="vc"><div class="vn">${v.name}</div>
+          <div class="vsub"><span>⭐ ${v.rating}</span><span>📍 ${v.dist}</span></div>
+          <div class="rowb">${v.offer?`<span class="offer">🎁 offer</span>`:''}${shared(me.cuisines,f.cuisines).filter(c=>v.cuisines.includes(c)).map(c=>`<span class="chip-static teal">${c}</span>`).join("")}</div>
+        </div>
+        <button class="btn btn-coral btn-sm" style="align-self:center" onclick="shareVenue(${id},${v.id})">Send</button>
+      </div>`).join("")}
+    </div>`;
+});
+function shareVenue(chatId,venueId){const v=VENUES.find(x=>x.id===venueId);state.threads[chatId].push({who:"me",text:"How about here? 🍽️",});state.threads[chatId].push({who:"me",venue:v});openChat(chatId);toast("Venue shared");setTimeout(()=>replyLater(chatId),400);}
+
+/* ---------- VENUE DETAIL ---------- */
+function openVenue(id){state.bookingVenue=VENUES.find(v=>v.id===id);go("venue",{id});}
+route("venue",({id})=>{
+  const v=VENUES.find(x=>x.id===id);
+  return `
+    <div class="scroll">
+      <div style="position:relative">
+        <img id="vdImg" src="${v.img}">
+        <button class="back" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px;background:rgba(0,0,0,.4)" onclick="enterApp()">‹</button>
+        <button class="back" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;background:rgba(0,0,0,.4)" onclick="toast('Saved to favourites ♥')">♡</button>
+        ${v.offer?`<div style="position:absolute;bottom:14px;left:16px" class="offer">🎁 ${v.offer}</div>`:""}
+      </div>
+      <div class="vdhead">
+        <h2>${v.name}</h2>
+        <div class="vdrow"><span>⭐ ${v.rating}</span><span>·</span><span>📍 ${v.dist}</span><span>·</span><span>${v.price}</span><span>·</span><span>${v.area}</span></div>
+        <div class="chips" style="margin-top:12px">${v.cuisines.map(c=>`<span class="chip-static ${me.cuisines.includes(c)?'teal':''}">${c}</span>`).join("")}${v.diets.map(d=>`<span class="chip-static hot">${d}</span>`).join("")}</div>
+      </div>
+      <div class="pad" style="padding-top:14px">
+        <div class="info-line"><span class="ic">🕐</span><div><b>Open all week</b>${v.hours}</div></div>
+        <div class="info-line"><span class="ic">📍</span><div><b>Address</b>${v.addr}</div></div>
+        <div class="info-line"><span class="ic">🎉</span><div><b>Atmosphere</b>${v.tags.join(" · ")}</div></div>
+        <div style="margin-top:10px"><button class="btn btn-coral" onclick="go('book',{id:${v.id}})">Book a table</button></div>
+      </div>
+    </div>`;
+});
+
+/* ---------- BOOKING ---------- */
+route("book",({id})=>{
+  const v=VENUES.find(x=>x.id===id);
+  const days=["FRI","SAT","SUN","MON","TUE"];const nums=[8,9,10,11,12];
+  const slots=["6:00","6:30","7:00","7:30","8:00","8:30","9:00","9:30","10:00"];
+  const off=[0,8];
+  return `
+    <div class="appbar"><button class="back" onclick="openVenue(${id})">‹</button><div class="script" style="font-size:22px">Book a table</div></div>
+    <div class="scroll pad">
+      <div class="vcard" style="cursor:default"><img src="${v.img}"><div class="vc"><div class="vn">${v.name}</div><div class="vsub"><span>⭐ ${v.rating}</span><span>📍 ${v.dist}</span></div>${v.offer?`<span class="offer">🎁 ${v.offer}</span>`:''}</div></div>
+      <div class="divide"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <b style="font-size:15px">Guests</b>
+        <div class="stepper"><button onclick="stepGuests(-1)">−</button><span id="gv">${state.bookGuests}</span><button onclick="stepGuests(1)">+</button></div>
+      </div>
+      <b style="font-size:15px;display:block;margin-bottom:11px">Select date</b>
+      <div class="seg" id="dateSeg">${days.map((d,i)=>`<div class="datep ${i===state.bookDate?'on':''}" onclick="pickDate(${i})"><b>${d}</b><span>${nums[i]}</span></div>`).join("")}</div>
+      <b style="font-size:15px;display:block;margin:20px 0 11px">Select time</b>
+      <div class="slots" id="slotGrid">${slots.map((s,i)=>`<div class="slot ${off.includes(i)?'off':''} ${state.bookSlot===s?'on':''}" onclick="pickSlot('${s}')">${s} pm</div>`).join("")}</div>
+    </div>
+    <div class="pad" style="padding-top:0"><button class="btn btn-coral" id="confirmBtn" onclick="confirmBooking(${id})">Confirm booking</button></div>`;
+});
+function stepGuests(n){state.bookGuests=Math.max(1,Math.min(12,state.bookGuests+n));$("#gv").textContent=state.bookGuests;}
+function pickDate(i){state.bookDate=i;document.querySelectorAll("#dateSeg .datep").forEach((d,idx)=>d.classList.toggle("on",idx===i));}
+function pickSlot(s){state.bookSlot=s;document.querySelectorAll("#slotGrid .slot").forEach(el=>el.classList.toggle("on",el.textContent.startsWith(s)));}
+function confirmBooking(id){if(!state.bookSlot){toast("Pick a time first");return;}const v=VENUES.find(x=>x.id===id);state.myBookings.unshift({venueId:id,date:["Fri 8","Sat 9","Sun 10","Mon 11","Tue 12"][state.bookDate]+" Aug",time:state.bookSlot+" pm",guests:state.bookGuests,withName:null,when:"upcoming"});awardBadge("booker");notify("Table booked ✅",`${v.name} · ${state.bookGuests} guests at ${state.bookSlot} pm`);go("booked",{id});}
+
+route("booked",({id})=>{
+  const v=VENUES.find(x=>x.id===id);
+  return `<div class="scroll center red-bg" style="padding:36px 30px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="width:78px;height:78px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff;box-shadow:var(--shadow-lg)">✓</div>
+      <h1 class="big" style="color:#fff;margin-top:22px">Table booked!</h1>
+      <p style="color:#fff;opacity:.92;margin-top:8px;font-size:15px">${v.name} · ${state.bookGuests} guests<br>${state.bookSlot} pm</p>
+      ${v.offer?`<div style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:12px 16px;margin-top:20px;color:#fff;font-size:13px">🎁 Your offer is applied: <b>${v.offer}</b></div>`:""}
+      <div style="background:rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;margin-top:16px;color:#fff;font-size:12px;text-align:left;line-height:1.6;width:100%;max-width:320px">
+        <b>🛡️ Meeting safely</b><br>Tell a friend your plans with <b>Share my date</b>, meet in this public venue, and trust your instincts. You've got this.</div>
+    </div>
+    <button class="btn btn-white" onclick="enterApp()">Done</button>
+  </div>`;
+});
+routes.booked.red=true;
+
+/* ---------- PROFILE ---------- */
+function tabProfile(){
+  const vtick=state.verified?'<span style="font-size:15px;color:#4FC3F7">✓</span>':'';
+  return `
+    <div class="scroll">
+      <div class="pfhero">
+        <img src="img/p6.jpg">
+        <div class="grad"></div>
+        <div class="nm"><h2>You, 28 ${vtick}</h2>
+          <div class="tier">👑 Founding member · free</div></div>
+      </div>
+      <div class="pad">
+        <div style="display:flex;gap:8px;margin-bottom:6px" class="chips">${me.cuisines.map(c=>`<span class="chip-static teal">${c}</span>`).join("")}</div>
+        <div class="divide"></div>
+        <div class="menu-row" onclick="openPassport()"><span class="ic">🎫</span> My Foodie Passport <span class="ar">›</span></div>
+        <div class="menu-row" onclick="go('bookings')"><span class="ic">📋</span> My bookings <span class="ar">›</span></div>
+        <div class="menu-row" onclick="switchTabFromProfile('matches')"><span class="ic">💘</span> My matches <span class="ar">›</span></div>
+        <div class="menu-row" onclick="go('plans')"><span class="ic">👑</span> Membership <span class="ar">›</span></div>
+        <div class="menu-row" onclick="doInstall()"><span class="ic">📲</span> Install Yumble app <span class="ar">›</span></div>
+        <div class="menu-row" onclick="manualNotif()"><span class="ic">🔔</span> Notifications <span class="ar">›</span></div>
+        <div class="menu-row" onclick="go('recommend')"><span class="ic">➕</span> Recommend a restaurant <span class="ar">›</span></div>
+        <div class="menu-row" onclick="go('safety',{})"><span class="ic">🛡️</span> Safety centre <span class="ar">›</span></div>
+        <div class="menu-row" onclick="go('about',{})"><span class="ic">💬</span> Help &amp; contact <span class="ar">›</span></div>
+        <div class="menu-row" style="color:var(--red)" onclick="go('welcome')"><span class="ic">↩</span> Sign out</div>
+      </div>
+    </div>`;
+}
+function switchTabFromProfile(t){enterApp();setTimeout(()=>switchTab(t),50);}
+function manualNotif(){
+  if(!("Notification" in window)){toast("Notifications not supported here");return;}
+  if(Notification.permission==="granted"){notify("Notifications are on 🔔","Here's how a match alert looks.");toast("Notifications already on");}
+  else{sessionStorage.removeItem("notifAsked");askNotifications();}
+}
+
+/* ---------- PLANS ---------- */
+route("plans",()=>`
+  <div class="appbar"><button class="back" onclick="enterApp()">‹</button><div class="script" style="font-size:22px">Membership</div></div>
+  <div class="scroll pad">
+    <div class="plan gold" style="text-align:center">
+      <div class="rec">LAUNCH OFFER</div>
+      <div style="font-size:40px;margin:4px 0">🎉</div>
+      <div class="pt" style="color:#B8860B">Founding Member</div>
+      <div class="pp">Free<small> for 6 months</small></div>
+      <p class="h-sub" style="margin:8px 0 4px">Join now and everything's on us while others charge. You're a founding Foodie.</p>
+      <ul style="text-align:left"><li>Unlimited swipes & matches</li><li>See who likes you</li><li>Message all your matches</li><li>Book tables & join events</li><li>Full Taste Profile & Flavour Match</li><li>No restrictions — unlike other apps</li></ul>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="toast('You are a Founding Member 🎉');enterApp()">You're in — enjoy!</button>
+    </div>
+    <div class="plan">
+      <div class="pt">After launch</div><div class="pp">£14.99<small> /month</small></div>
+      <p class="h-sub" style="margin:6px 0 0">After your 6 free months, Foodies Premium keeps all the above. We'll always have a free tier too — we'll remind you before anything changes. No card needed today.</p>
+    </div>
+    <p class="h-sub" style="text-align:center">Prices shown for demo. Cancel anytime.</p>
+  </div>`);
+function setTier(t){state.tier=t;toast(t==='gold'?'Welcome to Gold Foodie 👑':'You are on the Free plan');enterApp();}
+
+/* ---------- PWA: service worker, install, notifications ---------- */
+let swReg=null, deferredInstall=null;
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(r=>{swReg=r;}).catch(()=>{});
+}
+// capture the install prompt (Android/Chrome)
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;showInstallBar();});
+window.addEventListener("appinstalled",()=>{deferredInstall=null;hideInstallBar();toast("Yumble installed 🎉");});
+
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent);}
+
+function showInstallBar(){
+  if(isStandalone()||document.getElementById("installBar"))return;
+  const b=document.createElement("div");b.id="installBar";
+  b.innerHTML=`<div style="display:flex;align-items:center;gap:12px">
+     <img src="icon-192.png" style="width:40px;height:40px;border-radius:11px">
+     <div style="flex:1;line-height:1.25"><b style="font-size:13.5px">Install Yumble</b><div style="font-size:11.5px;opacity:.75">Add to your home screen</div></div>
+     <button onclick="doInstall()" style="background:var(--red);color:#fff;border:0;border-radius:10px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer">Install</button>
+     <button onclick="hideInstallBar()" style="background:none;border:0;font-size:20px;color:#9AA3B0;cursor:pointer">×</button>
+   </div>`;
+  Object.assign(b.style,{position:"absolute",left:"12px",right:"12px",bottom:"calc(12px + var(--safe-b))",background:"#fff",borderRadius:"16px",padding:"12px 14px",boxShadow:"var(--shadow-lg)",zIndex:80});
+  document.getElementById("device").appendChild(b);
+}
+function hideInstallBar(){const b=document.getElementById("installBar");if(b)b.remove();}
+function doInstall(){
+  if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.finally(()=>{deferredInstall=null;hideInstallBar();});}
+  else if(isIOS()){showIOSInstall();}
+  else{toast("Use your browser menu → Add to Home Screen");hideInstallBar();}
+}
+function showIOSInstall(){
+  const m=document.createElement("div");m.id="iosSheet";
+  m.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;padding:22px;text-align:center">
+    <img src="icon-192.png" style="width:56px;height:56px;border-radius:15px;margin-bottom:10px">
+    <h3 style="font-size:17px;margin-bottom:6px">Install Yumble</h3>
+    <p style="font-size:13.5px;color:var(--slate);line-height:1.5">Tap the <b>Share</b> icon <span style="font-size:16px">􀈂</span> in Safari, then choose <b>“Add to Home Screen”</b>.</p>
+    <button onclick="document.getElementById('iosSheet').remove()" class="btn btn-coral" style="margin-top:16px">Got it</button></div>`;
+  Object.assign(m.style,{position:"absolute",inset:0,background:"rgba(0,0,0,.45)",zIndex:90,display:"flex",alignItems:"flex-end"});
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  document.getElementById("device").appendChild(m);
+}
+
+// Notification permission — asked at a natural moment (after first match / entering app)
+function askNotifications(){
+  if(!("Notification" in window))return;
+  if(Notification.permission!=="default")return;      // already asked
+  if(sessionStorage.getItem("notifAsked"))return;
+  sessionStorage.setItem("notifAsked","1");
+  const m=document.createElement("div");m.id="notifSheet";
+  m.innerHTML=`<div style="background:#fff;border-radius:22px;padding:26px 22px;text-align:center;max-width:330px;margin:auto">
+    <div style="width:64px;height:64px;border-radius:50%;background:#FFE9E9;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px">🔔</div>
+    <h3 style="font-size:19px;margin-bottom:8px">Never miss a match</h3>
+    <p style="font-size:13.5px;color:var(--slate);line-height:1.55">Turn on notifications and we'll let you know about new matches, messages and table bookings.</p>
+    <button onclick="enableNotifications()" class="btn btn-primary" style="margin-top:18px">Turn on notifications</button>
+    <button onclick="document.getElementById('notifSheet').remove()" class="link" style="margin-top:14px;width:100%;color:var(--slate)">Not now</button>
+  </div>`;
+  Object.assign(m.style,{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",zIndex:90,display:"flex",padding:"24px"});
+  document.getElementById("device").appendChild(m);
+}
+function enableNotifications(){
+  const sheet=document.getElementById("notifSheet");if(sheet)sheet.remove();
+  Notification.requestPermission().then(p=>{
+    if(p==="granted"){
+      toast("Notifications on 🔔");
+      notify("Welcome to Yumble!","We'll ping you the moment someone likes you.");
+    }else{toast("You can turn these on later in Settings");}
+  });
+}
+function notify(title,body){
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  if(swReg&&swReg.active){swReg.active.postMessage({type:"notify",title,body});}
+  else{try{new Notification(title,{body,icon:"icon-192.png"});}catch(e){}}
+}
+
+/* ---------- VIDEO DATE (pre-meet call) ---------- */
+let callTimer=null;
+function startCall(id){
+  const f=FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id);if(!f)return;
+  let cs=document.getElementById("callScreen");if(cs)cs.remove();
+  cs=document.createElement("div");cs.id="callScreen";cs.className="show";
+  cs.innerHTML=`
+    <div class="callmain">
+      <img src="${f.img}" alt="${f.name}">
+      <div class="callinfo"><h3>${f.name}</h3><p id="callState">Connecting…</p></div>
+      <div class="callbadge">🔒 Foodies keeps your number private</div>
+      <div class="callself"><img src="img/p6.jpg"></div>
+    </div>
+    <div class="callbar">
+      <button class="callbtn" onclick="toast('Mic off')">🎤</button>
+      <button class="callbtn end" onclick="endCall()">📞</button>
+      <button class="callbtn" onclick="toast('Camera flipped')">🔄</button>
+    </div>`;
+  document.getElementById("device").appendChild(cs);
+  let s=0;const states=["Connecting…","Ringing…","Connected — say hi! 👋"];
+  callTimer=setInterval(()=>{s++;const el=document.getElementById("callState");if(el&&s<states.length)el.textContent=states[s];if(s>=states.length){clearInterval(callTimer);let sec=0;callTimer=setInterval(()=>{sec++;const e2=document.getElementById("callState");if(e2)e2.textContent="00:"+String(sec).padStart(2,"0");},1000);}},1100);
+}
+function endCall(){clearInterval(callTimer);const cs=document.getElementById("callScreen");if(cs){cs.classList.remove("show");setTimeout(()=>cs.remove(),200);}toast("Call ended — nice chat!");}
+
+/* ---------- SAFETY TOOLKIT ---------- */
+route("safety",({id})=>{
+  const f=id?(FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id)):null;
+  return `
+    <div class="appbar"><button class="back" onclick="${id?`openChat(${id})`:'enterApp()'}">‹</button><div class="script" style="font-size:22px">Safety centre</div></div>
+    <div class="scroll pad">
+      ${f?`<div style="background:#F0FBFA;border:1px solid #D8F0EC;border-radius:14px;padding:13px 15px;font-size:13px;color:#0C8073;margin-bottom:16px">You're chatting with <b>${f.name}</b> ${f.verified?'· ✓ photo verified':''}. Here are your safety tools for this match.</div>`:''}
+      <div class="safety-tile"><div class="st-ic">📹</div><div><b>Video date first</b><p>Get to know each other on a private in-app call before meeting — your number stays hidden.</p></div>${f?`<button class="btn btn-coral btn-sm sw" onclick="startCall(${id})">Start</button>`:''}</div>
+      <div class="safety-tile"><div class="st-ic">📍</div><div><b>Share my date plan</b><p>Send a trusted friend where you're going, who with, and when — with a live check-in timer.</p></div><div class="switch ${state.safety_share?'on':''}" onclick="toggleSafety(this,'safety_share')"><i></i></div></div>
+      <div class="safety-tile"><div class="st-ic">✅</div><div><b>Meet in a Yumble venue</b><p>All suggested venues are public, staffed places — never a private address.</p></div><div class="switch on" style="pointer-events:none"><i></i></div></div>
+      <div class="safety-tile"><div class="st-ic">🔔</div><div><b>Safe-arrival check-in</b><p>We'll nudge you during your date to check you're OK. One tap for help if not.</p></div><div class="switch ${state.safety_checkin?'on':''}" onclick="toggleSafety(this,'safety_checkin')"><i></i></div></div>
+      <div class="safety-tile"><div class="st-ic">🚩</div><div><b>Block & report</b><p>Anyone making you uncomfortable can be blocked and reported instantly. We review every report.</p></div><button class="btn btn-sm sw" style="background:#FFF0F0;color:var(--red);width:auto" onclick="toast('Reported — our team will review (demo)')">Report</button></div>
+      <div class="divide"></div>
+      <div style="background:#FFF6F6;border:1px solid #F8D7D7;border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--red-dark);line-height:1.6">
+        <b>In an emergency, always call 999.</b><br>Yumble safety tools support a good date — they don't replace emergency services.
+      </div>
+    </div>`;
+});
+function openSafety(id){go("safety",{id});}
+function toggleSafety(el,key){state[key]=!state[key];el.classList.toggle("on",state[key]);toast(state[key]?"Turned on":"Turned off");}
+
+/* ---------- RICH FOODIE PROFILE ---------- */
+function openFoodie(id){go("foodie",{id});}
+route("foodie",({id})=>{
+  const f=FOODIES.find(x=>x.id===id);if(!f)return"";
+  const fm=flavourMatch(f);const sh=shared(me.cuisines,f.cuisines);
+  return `
+    <div class="scroll" style="background:#fff">
+      <div style="position:relative">
+        <img src="${f.img}" style="width:100%;height:420px;object-fit:cover">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent 45%)"></div>
+        <button class="back" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px;background:rgba(0,0,0,.4)" onclick="enterApp()">‹</button>
+        <div class="fmbadge" style="top:auto;bottom:74px;right:18px"><div class="fmring" style="--p:${fm}"><span>${fm}<small>%</small></div><div class="fmlbl">Flavour<br>match</div></div>
+        <div style="position:absolute;bottom:16px;left:20px;color:#fff">
+          <div style="font-size:27px;font-weight:800">${f.name}, ${f.age} ${f.verified?'<span style="color:#4FC3F7;font-size:17px">✓</span>':''}</div>
+          <div style="font-size:14px;opacity:.9;margin-top:3px">${FOODIE_TYPES[f.foodieType]} ${f.foodieType} · 📍 ${f.dist}</div>
+        </div>
+      </div>
+      <div class="pad">
+        <div style="background:#F0FBFA;border:1px solid #D8F0EC;border-radius:14px;padding:13px 15px;font-size:13.5px;color:#0C8073;margin-bottom:18px">
+          <b>${matchReason(f)}</b></div>
+        <div class="prompt-card"><b>${f.prompt.q}</b><p>${f.prompt.a}</p></div>
+        <div class="prompt-card"><b>${f.prompt2.q}</b><p>${f.prompt2.a}</p></div>
+        <div style="margin:18px 0"><img src="${f.dish}" style="width:100%;height:150px;object-fit:cover;border-radius:16px"><p class="h-sub" style="text-align:center;margin-top:6px">${f.name}'s kind of place 😋</p></div>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:10px">Taste profile</h3>
+        ${tasteBars(f.taste)}
+        <h3 style="font-size:15px;font-weight:800;margin:20px 0 10px">Loves to eat</h3>
+        <div class="chips">${f.cuisines.map(c=>`<span class="chip-static ${sh.includes(c)?'teal':''}">${c}</span>`).join("")}</div>
+      </div>
+      <div class="pad" style="padding-top:6px;display:flex;gap:12px">
+        <button class="btn" style="background:#fff;border:1.5px solid var(--coral);color:var(--coral);flex:1" onclick="enterApp()">✕ Pass</button>
+        <button class="btn btn-coral" style="flex:1" onclick="likeFromProfile(${f.id})">♥ Like</button>
+      </div>
+    </div>`;
+});
+function likeFromProfile(id){const f=FOODIES.find(x=>x.id===id);const sh=shared(me.cuisines,f.cuisines);if(sh.length>=2){if(!state.matches.find(m=>m.id===f.id))state.matches.unshift(f);enterApp();setTimeout(()=>showMatch(f),200);}else{toast("Liked ♥");enterApp();}}
+
+/* ---------- EAT TONIGHT ---------- */
+function tabTonight(){
+  const free=FOODIES.filter(f=>f.tonight);
+  return `
+    <div class="appbar" style="background:linear-gradient(135deg,#12B5A5,#0C8073)"><div class="script" style="font-size:22px">Eat Tonight</div><div class="spacer"></div><span style="font-size:11px;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:999px">🟢 LIVE</span></div>
+    <div class="scroll pad">
+      <div style="background:linear-gradient(135deg,#12B5A5,#0C8073);border-radius:18px;padding:18px;color:#fff;margin-bottom:18px">
+        <b style="font-size:16px">Hungry now? 🍽️</b>
+        <p style="font-size:13px;opacity:.95;margin-top:5px;line-height:1.5">These Foodies are free to eat tonight near you. Match, pick a spot, and go — no three-week text marathon.</p>
+      </div>
+      ${free.map(f=>{const fm=flavourMatch(f);const v=bestVenuesFor(f)[0];return `
+        <div class="vcard" style="align-items:center" onclick="openFoodie(${f.id})">
+          <img src="${f.img}" style="width:70px;height:70px;border-radius:14px">
+          <div class="vc">
+            <div class="vn">${f.name}, ${f.age} <span style="color:var(--teal);font-size:12px;font-weight:700">${fm}% match</span></div>
+            <div class="vsub"><span>${FOODIE_TYPES[f.foodieType]} ${f.foodieType}</span><span>📍 ${f.dist}</span></div>
+            <div class="rowb"><span class="chip-static teal">🍽️ ${v.name}</span></div>
+          </div>
+          <button class="btn btn-sm" style="background:var(--teal);color:#fff;align-self:center" onclick="event.stopPropagation();tonightInvite(${f.id})">Invite</button>
+        </div>`}).join("")}
+    </div>`;
+}
+function tonightInvite(id){const f=FOODIES.find(x=>x.id===id);awardBadge("nightowl");if(!state.matches.find(m=>m.id===f.id))state.matches.unshift(f);toast(`Invite sent to ${f.name} 🟢`);notify(`Tonight invite sent`,`${f.name} will see you're free to eat tonight`);setTimeout(()=>openChat(id),500);}
+
+/* ---------- VENUE DATE DECK ---------- */
+let vdeckIdx=0, vdeckLikes=[];
+function startDateDeck(chatId){state.dateDeckChat=chatId;vdeckIdx=0;vdeckLikes=[];go("datedeck",{id:chatId});}
+route("datedeck",({id})=>{
+  const f=FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id);
+  return `
+    <div class="appbar"><button class="back" onclick="openChat(${id})">‹</button><div class="script" style="font-size:20px">Where to?</div></div>
+    <div style="padding:12px 16px 0"><p class="h-sub">Swipe venues you'd go to with <b>${f?f.name:"them"}</b>. When you both like the same one — it's a plan. 🍴</p></div>
+    <div id="vdeck" style="flex:1;position:relative;padding:14px"></div>
+    <div class="actions">
+      <button class="act lg nope" onclick="vdeckSwipe(false)">✕</button>
+      <button class="act lg like" onclick="vdeckSwipe(true)">♥</button>
+    </div>`;
+});
+routes.datedeck.after=(el,{id})=>{paintVDeck(id);};
+function paintVDeck(chatId){
+  const f=FOODIES.find(x=>x.id===chatId)||state.matches.find(x=>x.id===chatId);
+  const venues=bestVenuesFor(f);
+  const deck=$("#vdeck");if(!deck)return;deck.innerHTML="";
+  if(vdeckIdx>=venues.length){
+    const pick=venues[0];
+    deck.innerHTML=`<div style="position:absolute;inset:14px;border-radius:24px;background:linear-gradient(160deg,var(--teal),#0C8073);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:30px">
+      <div style="font-size:44px">🍽️</div><div class="script" style="font-size:30px;margin:8px 0">It's a plan!</div>
+      <p style="opacity:.92;font-size:14px">You both picked</p><b style="font-size:19px;margin:4px 0 2px">${pick.name}</b><p style="font-size:12.5px;opacity:.85">${pick.area.replace(', London','')} · ${pick.cuisines.slice(0,2).join(", ")}</p>
+      <button class="btn btn-white" style="margin-top:20px;max-width:240px" onclick="go('book',{id:${pick.id}})">Book the table</button>
+      <button class="link" style="color:#fff;margin-top:12px" onclick="openChat(${chatId})">Back to chat</button></div>`;
+    return;
+  }
+  const v=venues[vdeckIdx];
+  const card=document.createElement("div");card.className="card";card.style.position="absolute";card.style.inset="14px";
+  card.innerHTML=`<img src="${v.img}"><div class="veil"></div>
+    <div class="stamp like">YES</div><div class="stamp nope">NAH</div>
+    <div class="body">
+      <div class="name" style="font-size:22px">${v.name}</div>
+      <div class="meta"><span>⭐ ${v.rating}</span><span>📍 ${v.area.replace(', London','')}</span><span>${v.price}</span></div>
+      ${v.offer?`<div class="prompt"><b>🎁 Foodies offer</b>${v.offer}</div>`:''}
+      <div class="cui">${v.cuisines.slice(0,3).map(c=>`<span>${c}</span>`).join("")}</div>
+    </div>`;
+  deck.appendChild(card);
+}
+function vdeckSwipe(like){const deck=$("#vdeck");const card=deck.querySelector(".card");if(!card)return;
+  if(like)vdeckLikes.push(vdeckIdx);
+  card.style.transition="transform .32s ease";card.style.transform=`translateX(${like?600:-600}px) rotate(${like?20:-20}deg)`;
+  setTimeout(()=>{vdeckIdx++;paintVDeck(state.dateDeckChat);},300);}
+
+/* ---------- DESSERT VERDICT ---------- */
+function openDessert(id){go("dessert",{id});}
+route("dessert",({id})=>{
+  const f=FOODIES.find(x=>x.id===id)||state.matches.find(x=>x.id===id);
+  return `
+    <div class="appbar"><button class="back" onclick="openChat(${id})">‹</button><div class="script" style="font-size:20px">How was it?</div></div>
+    <div class="scroll pad center" style="padding-top:24px">
+      <img src="${f?f.img:'img/p1.jpg'}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;margin-bottom:14px">
+      <h2 style="font-size:20px;font-weight:800">Your date with ${f?f.name:'your Foodie'}</h2>
+      <p class="h-sub" style="margin:6px 0 22px">The Yumble rule: if it went well, order dessert. If it went okay… order dessert. 🍰</p>
+      <div style="display:flex;gap:12px;width:100%;max-width:320px">
+        <button onclick="dessertVerdict(${id},'again')" class="verdict"><span style="font-size:34px">🍰</span><b>Dessert!</b><small>Let's do it again</small></button>
+        <button onclick="dessertVerdict(${id},'maybe')" class="verdict"><span style="font-size:34px">☕</span><b>Just coffee</b><small>Nice, but no spark</small></button>
+      </div>
+      <button onclick="dessertVerdict(${id},'no')" class="verdict" style="max-width:320px;flex-direction:row;justify-content:center;gap:10px;margin-top:12px"><span style="font-size:26px">🧾</span><b>Bill please</b> <small>Not for me</small></button>
+    </div>`;
+});
+function dessertVerdict(id,v){
+  awardBadge("dessert");
+  if(v==="again"){toast("Sweet! We'll keep the spark going 🍰");notify("Dessert ordered 🍰",`Hope your next date is just as good!`);}
+  else if(v==="maybe")toast("Noted — coffee it is ☕");
+  else toast("Thanks for the honesty 🧾");
+  enterApp();
+}
+
+/* ---------- FOODIE PASSPORT ---------- */
+function openPassport(){go("passport");}
+route("passport",()=>{
+  const earned=me.badges;
+  const level=earned.length>=6?"Gold":earned.length>=4?"Silver":"Bronze";
+  const lvColor=level==="Gold"?"#D9A441":level==="Silver"?"#9BA6B2":"#B5793B";
+  return `
+    <div class="appbar"><button class="back" onclick="enterApp()">‹</button><div class="script" style="font-size:22px">Foodie Passport</div></div>
+    <div class="scroll pad">
+      <div style="background:linear-gradient(135deg,${lvColor},${lvColor}cc);border-radius:20px;padding:22px;color:#fff;text-align:center;margin-bottom:20px;box-shadow:var(--shadow)">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;opacity:.9">${level.toUpperCase()} FOODIE</div>
+        <div style="font-size:40px;margin:8px 0">${FOODIE_TYPES[me.foodieType]||"🍴"}</div>
+        <div style="font-size:20px;font-weight:800">${me.foodieType}</div>
+        <div style="font-size:13px;opacity:.9;margin-top:4px">${earned.length}/${ALL_BADGES.length} badges · ${me.cuisinesTried} cuisines tried</div>
+      </div>
+      <h3 style="font-size:15px;font-weight:800;margin-bottom:12px">Your badges</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${ALL_BADGES.map(b=>{const has=earned.includes(b.id);return `
+          <div style="border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;opacity:${has?1:.4};background:${has?'#fff':'#FAFBFC'}">
+            <div style="font-size:32px;filter:${has?'none':'grayscale(1)'}">${b.icon}</div>
+            <b style="font-size:13px;display:block;margin-top:6px">${b.name}</b>
+            <p style="font-size:11px;color:var(--slate);margin-top:2px;line-height:1.3">${has?b.desc:'🔒 Locked'}</p>
+          </div>`}).join("")}
+      </div>
+      <p class="h-sub" style="text-align:center;margin-top:18px">Earn badges by matching, booking, joining meet-ups and trying new cuisines.</p>
+    </div>`;
+});
+
+/* ---------- BOOKINGS ---------- */
+route("bookings",()=>{
+  const up=state.myBookings.filter(b=>b.when==="upcoming");
+  const past=state.myBookings.filter(b=>b.when==="past");
+  const row=(b)=>{const v=VENUES.find(x=>x.id===b.venueId);return `
+    <div class="vcard" onclick="openVenue(${v.id})">
+      <img src="${v.img}">
+      <div class="vc">
+        <div class="vn">${v.name}</div>
+        <div class="vsub"><span>🗓️ ${b.date}</span><span>🕐 ${b.time}</span></div>
+        <div class="vsub"><span>👥 ${b.guests} guests</span>${b.withName?`<span>with ${b.withName}</span>`:''}</div>
+        ${b.when==='past'?`<button class="btn btn-sm btn-coral" style="margin-top:6px" onclick="event.stopPropagation();openReview(${v.id})">Rate your visit</button>`:`<span class="offer" style="margin-top:4px;display:inline-block">Confirmed ✓</span>`}
+      </div></div>`;};
+  return `
+    <div class="appbar"><button class="back" onclick="enterApp()">‹</button><div class="script" style="font-size:22px">My Bookings</div></div>
+    <div class="scroll pad">
+      <div class="shead"><h3>Upcoming</h3></div>
+      ${up.length?up.map(row).join(""):'<p class="h-sub" style="margin-bottom:16px">No upcoming tables. Find a match and book a spot!</p>'}
+      <div class="divide"></div>
+      <div class="shead"><h3>Previous</h3></div>
+      ${past.length?past.map(row).join(""):'<p class="h-sub">Your dining history will appear here.</p>'}
+    </div>`;
+});
+function openReview(id){const v=VENUES.find(x=>x.id===id);toast(`Thanks for reviewing ${v.name}! (demo)`);}
+
+/* ---------- EVENTS (speed dating / singles dinners / mixers) ---------- */
+const EVENTS=[
+  {id:1,type:"Speed Dating",venueId:1,title:"Speed Dating Night",date:"Fri 8 Aug",time:"7:00pm",price:0,menuPrice:35,menu:"3-course Lebanese set menu",spots:20,going:14,age:"25–35",desc:"10 mini-dates, rotating tables, fixed menu. Tick who you liked — we reveal mutual matches after."},
+  {id:2,type:"Singles Dinner",venueId:7,title:"Long-Table Singles Dinner",date:"Sat 9 Aug",time:"7:30pm",price:0,menuPrice:42,menu:"4-course Italian sharing feast",spots:16,going:11,age:"30–45",desc:"One long table, family-style Italian, great conversation. No pressure, just good food and company."},
+  {id:3,type:"Cuisine Mixer",venueId:6,title:"Japanese Night Mixer",date:"Thu 14 Aug",time:"6:30pm",price:0,menuPrice:28,menu:"Omakase tasting + sake flight",spots:24,going:9,age:"All welcome",desc:"A relaxed mixer for Japanese-food lovers. Sake, small plates, and fellow Foodies who share your taste."},
+  {id:4,type:"Speed Dating",venueId:23,title:"Aperitivo Speed Dating",date:"Wed 20 Aug",time:"7:00pm",price:0,menuPrice:30,menu:"Aperitivo boards + 2 spritzes",spots:18,going:6,age:"25–40",desc:"Italian-style speed dating on the terrace. Spritz in hand, meet 8–10 matches in one lovely evening."}
+];
+const EVENT_ICON={"Speed Dating":"⏱️","Singles Dinner":"🍝","Cuisine Mixer":"🥂"};
+function tabEvents(){
+  return `
+    <div class="appbar"><button class="back" onclick="switchTab('explore')">‹</button><div class="script" style="font-size:22px">Foodie Events</div></div>
+    <div class="scroll pad">
+      <div style="background:linear-gradient(135deg,var(--red),var(--red-deep));border-radius:18px;padding:18px;color:#fff;margin-bottom:18px">
+        <b style="font-size:16px">Meet lots of Foodies at once 🥂</b>
+        <p style="font-size:13px;opacity:.95;margin-top:5px;line-height:1.5">Speed dating, singles dinners and cuisine mixers hosted at partner restaurants. Free entry — you just pay for the set menu.</p>
+      </div>
+      ${EVENTS.map(e=>eventCard(e)).join("")}
+    </div>`;
+}
+function eventCard(e){
+  const v=VENUES.find(x=>x.id===e.venueId);const booked=state.eventsBooked.includes(e.id);
+  return `<div class="gcard" onclick="openEvent(${e.id})" style="cursor:pointer">
+    <div class="gtop" style="background:url('${v.img}') center/cover">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65),transparent)"></div>
+      <div style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);color:var(--ink);font-size:11px;font-weight:800;padding:4px 9px;border-radius:7px">${EVENT_ICON[e.type]} ${e.type}</div>
+      <div class="gv" style="position:relative">${e.title}</div>
+    </div>
+    <div class="gbody">
+      <div class="gmeta"><span>📍 ${v.name}</span><span>🗓️ ${e.date}</span><span>🕐 ${e.time}</span></div>
+      <div class="gmeta"><span>🍽️ ${e.menu}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <span class="offer" style="background:var(--teal)">Free entry</span>
+        <span class="chip-static">Menu £${e.menuPrice}pp</span>
+        <span style="font-size:12px;color:var(--slate);margin-left:auto">${e.going}/${e.spots} going</span>
+      </div>
+    </div></div>`;
+}
+function openEvent(id){go("event",{id});}
+route("event",({id})=>{
+  const e=EVENTS.find(x=>x.id===id);const v=VENUES.find(x=>x.id===e.venueId);const booked=state.eventsBooked.includes(e.id);
+  return `
+    <div class="scroll" style="background:#fff">
+      <div style="position:relative">
+        <img src="${v.img}" style="width:100%;height:220px;object-fit:cover">
+        <button class="back" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px;background:rgba(0,0,0,.4)" onclick="switchTab('events')">‹</button>
+        <div style="position:absolute;bottom:14px;left:16px;background:rgba(255,255,255,.95);color:var(--ink);font-size:12px;font-weight:800;padding:5px 11px;border-radius:8px">${EVENT_ICON[e.type]} ${e.type}</div>
+      </div>
+      <div class="pad">
+        <h2 style="font-size:22px;font-weight:800">${e.title}</h2>
+        <div class="vdrow"><span>📍 ${v.name}, ${v.area.replace(', London','')}</span></div>
+        <div class="info-line"><span class="ic">🗓️</span><div><b>When</b>${e.date} · ${e.time}</div></div>
+        <div class="info-line"><span class="ic">🍽️</span><div><b>Set menu</b>${e.menu} · £${e.menuPrice}pp</div></div>
+        <div class="info-line"><span class="ic">👥</span><div><b>Who's coming</b>${e.going} going · ${e.spots-e.going} spots left · ages ${e.age}</div></div>
+        <div class="info-line"><span class="ic">🎟️</span><div><b>Entry</b>Free with Yumble — you only pay for the menu on the night</div></div>
+        <p class="h-sub" style="margin:14px 0">${e.desc}</p>
+        <div style="background:#F0FBFA;border:1px solid #D8F0EC;border-radius:14px;padding:13px 15px;font-size:12.5px;color:#0C8073;line-height:1.5">🛡️ Every attendee is a verified Foodie. Hosted in a public venue with our team on hand.</div>
+      </div>
+      <div class="pad" style="padding-top:0">
+        <button class="btn ${booked?'btn-dark':'btn-coral'}" onclick="bookEvent(${e.id})">${booked?'Going ✓ — tap to cancel':'Reserve free spot'}</button>
+      </div>
+    </div>`;
+});
+function bookEvent(id){const i=state.eventsBooked.indexOf(id);const e=EVENTS.find(x=>x.id===id);if(i<0){state.eventsBooked.push(id);awardBadge("social");toast("Spot reserved 🎟️");notify("Event booked 🎟️",`${e.title} · ${e.date} ${e.time}`);go("event",{id});}else{state.eventsBooked.splice(i,1);toast("Booking cancelled");go("event",{id});}}
+
+/* ---------- RECOMMEND A RESTAURANT ---------- */
+route("recommend",()=>`
+  <div class="appbar"><button class="back" onclick="switchTab('explore')">‹</button><div class="script" style="font-size:20px">Recommend a spot</div></div>
+  <div class="scroll pad">
+    <p class="h-sub" style="margin-bottom:18px">Know a great restaurant that should be on Yumble? Tell us — we'll reach out to get them on board with offers for members.</p>
+    <div class="field"><label>Restaurant name</label><input placeholder="e.g. Nonna's Kitchen"></div>
+    <div class="field"><label>Area or postcode</label><input placeholder="e.g. Islington N1"></div>
+    <div class="field"><label>Cuisine</label><input placeholder="e.g. Italian"></div>
+    <div class="field"><label>Why do you love it? (optional)</label><input placeholder="Best carbonara in London"></div>
+    <button class="btn btn-coral" onclick="toast('Thanks! We will check them out 🙌');switchTab('explore')">Send recommendation</button>
+    <p class="h-sub" style="text-align:center;margin-top:14px">Get a 🌍 Globe Trotter badge when your pick joins Yumble.</p>
+  </div>`);
+
+/* ---------- ID VERIFICATION (mimics Stripe Identity / Yoti) ---------- */
+function startVerify(){go("verify1");}
+route("verify1",()=>`
+  <div class="appbar"><button class="back" onclick="enterApp()">‹</button><div class="script" style="font-size:20px">Get verified</div></div>
+  <div class="scroll pad center" style="padding-top:20px">
+    <div style="width:72px;height:72px;border-radius:50%;background:#F0FBFA;display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:16px">🛡️</div>
+    <h2 style="font-size:21px;font-weight:800;text-align:center">Verify you're really you</h2>
+    <p class="h-sub" style="text-align:center;margin:8px 0 20px">Verified members get a blue tick, more matches, and access to events. It takes about a minute.</p>
+    <div style="width:100%;text-align:left">
+      <div class="info-line"><span class="ic">🤳</span><div><b>Step 1 — Selfie</b>A quick liveness selfie</div></div>
+      <div class="info-line"><span class="ic">🪪</span><div><b>Step 2 — Photo ID</b>Passport or driving licence</div></div>
+      <div class="info-line"><span class="ic">✅</span><div><b>Step 3 — Done</b>Usually verified in seconds</div></div>
+    </div>
+    <div style="background:#FFF6F6;border:1px solid #F8D7D7;border-radius:14px;padding:13px 15px;font-size:12px;color:var(--red-dark);line-height:1.5;margin-top:16px">🔒 Your ID is checked by our secure verification partner and never shown to other users or stored by Foodies.</div>
+    <button class="btn btn-coral" style="margin-top:18px" onclick="go('verify2')">Start verification</button>
+    <p class="h-sub" style="margin-top:12px;font-size:11px">Demo — connects to Stripe Identity / Yoti in the real app.</p>
+  </div>`);
+route("verify2",()=>`
+  <div class="appbar"><button class="back" onclick="go('verify1')">‹</button><div class="script" style="font-size:20px">Step 1 — Selfie</div></div>
+  <div class="scroll pad center" style="padding-top:20px">
+    <div style="width:220px;height:280px;border-radius:20px;background:#12141a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:18px">
+      <div style="width:150px;height:190px;border:3px dashed rgba(255,255,255,.4);border-radius:50%"></div>
+      <div style="position:absolute;bottom:14px;color:#fff;font-size:12px;opacity:.8">Position your face in the oval</div>
+    </div>
+    <p class="h-sub" style="text-align:center;margin-bottom:18px">Look straight at the camera and blink when asked.</p>
+    <button class="btn btn-coral" onclick="verifyProgress()">📸 Capture selfie</button>
+  </div>`);
+function verifyProgress(){toast("Selfie captured ✓");go("verify3");}
+route("verify3",()=>`
+  <div class="appbar"><button class="back" onclick="go('verify2')">‹</button><div class="script" style="font-size:20px">Step 2 — Photo ID</div></div>
+  <div class="scroll pad center" style="padding-top:20px">
+    <div style="width:260px;height:165px;border-radius:16px;background:#F4F6F8;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:18px">
+      <div style="font-size:38px">🪪</div>
+      <div style="font-size:12px;color:var(--slate);margin-top:6px">Passport / Driving licence</div>
+    </div>
+    <div class="chips" style="justify-content:center;margin-bottom:18px">
+      <span class="chip on">Passport</span><span class="chip">Driving licence</span><span class="chip">ID card</span>
+    </div>
+    <p class="h-sub" style="text-align:center;margin-bottom:18px">Make sure all four corners are visible and text is clear.</p>
+    <button class="btn btn-coral" onclick="verifyDone()">📸 Scan ID</button>
+  </div>`);
+function verifyDone(){toast("ID scanned ✓");go("verifying");setTimeout(()=>{state.verified=true;me.badges.includes("verified")||me.badges.push("verified");go("verifydone");},2200);}
+route("verifying",()=>`
+  <div class="scroll center red-bg" style="padding:40px 30px;color:#fff">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div class="spinner"></div>
+      <h2 style="font-size:20px;font-weight:800;margin-top:24px">Verifying…</h2>
+      <p style="opacity:.9;font-size:14px;margin-top:8px">Our partner is checking your ID securely</p>
+    </div>
+  </div>`);
+routes.verifying.red=true;
+route("verifydone",()=>`
+  <div class="scroll center red-bg" style="padding:40px 30px;color:#fff">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="width:82px;height:82px;border-radius:50%;background:#fff;color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:var(--shadow-lg)">✓</div>
+      <h2 style="font-size:24px;font-weight:800;margin-top:22px">You're verified! 🎉</h2>
+      <p style="opacity:.92;font-size:14px;margin-top:8px;text-align:center">Your profile now has a blue tick. Enjoy more matches and access to Foodie events.</p>
+    </div>
+    <button class="btn btn-white" onclick="enterApp()">Done</button>
+  </div>`);
+routes.verifydone.red=true;
+
+/* ---------- ABOUT / CONTACT ---------- */
+route("about",()=>`
+  <div class="appbar"><button class="back" onclick="enterApp()">‹</button><div class="script" style="font-size:22px">Help &amp; contact</div></div>
+  <div class="scroll center red-bg" style="padding:36px 30px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center">
+      <div class="brandmark" style="font-size:44px">Yumble</div>
+      <div class="tag" style="margin:8px 0 30px">LOVE <b>FOOD</b> . LOVE <b>LIFE</b></div>
+      <p style="opacity:.9;font-size:14px;line-height:1.6;max-width:300px">Our friendly team is here 7 days a week for any help or advice along the way.</p>
+      <div style="margin-top:30px;text-align:left;width:100%;max-width:300px">
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.2)"><span style="font-size:18px">✉️</span><div><div style="font-size:11px;opacity:.7;font-weight:700;letter-spacing:.5px">EMAIL</div>hello@yumble.app</div></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.2)"><span style="font-size:18px">🌐</span><div><div style="font-size:11px;opacity:.7;font-weight:700;letter-spacing:.5px">WEBSITE</div>www.yumble.app</div></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 0"><span style="font-size:18px">💬</span><div><div style="font-size:11px;opacity:.7;font-weight:700;letter-spacing:.5px">IN-APP</div>Help centre &amp; report a problem</div></div>
+      </div>
+    </div>
+    <button class="btn btn-white" onclick="enterApp()">Back to app</button>
+  </div>`);
+routes.about.red=true;
+
+/* ---------- boot ---------- */
+// If a returning user's account is still cooking, take them straight there.
+if(me.accountStatus==="pending"){ go("verifyPending"); }
+else if(me.accountStatus==="approved"){ state.tab="discover"; go("app"); }
+else { go("welcome"); }
+</script>
+</body>
+</html>

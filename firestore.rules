@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: is the requester signed in
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // USERS: a person can read/write only their own profile.
+    // Others can read only limited public fields (handled by keeping private data
+    // in a subcollection, or by app-side rules). Admins can read all.
+    match /users/{uid} {
+      allow read: if signedIn();               // profiles are visible to signed-in members
+      allow create, update: if isOwner(uid);   // only you can edit your profile
+      allow delete: if isOwner(uid) || isAdmin();
+      // private subcollection (verification docs, ID refs) — owner + admin only
+      match /private/{doc} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    // ADMINS: only readable by admins; never client-writable (set manually in console)
+    match /admins/{uid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // VENUES: public read. Only the owning restaurant account or an admin can write.
+    match /venues/{venueId} {
+      allow read: if true;                     // anyone can browse venues
+      allow create: if signedIn();             // a restaurant can create its listing
+      allow update, delete: if isAdmin() ||
+        (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    // RESTAURANT ACCOUNTS: owner + admin
+    match /restaurants/{rid} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if isAdmin() ||
+        (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    // LIKES: you can create your own like; read only your own likes. Matching handled server-side/rules-lite.
+    match /likes/{likeId} {
+      allow create: if signedIn() && request.resource.data.from == request.auth.uid;
+      allow read: if signedIn() &&
+        (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // MATCHES: only the two matched users (or admin) can read
+    match /matches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.users;
+      allow create: if signedIn();             // created when reciprocal like detected
+      allow update, delete: if isAdmin();
+    }
+
+    // MESSAGES: only members of that match can read/write its messages
+    match /messages/{matchId}/items/{msgId} {
+      allow read, create: if signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.users;
+      allow update, delete: if false;
+    }
+
+    // BOOKINGS: the booking user, the venue owner, or admin
+    match /bookings/{bid} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if signedIn() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    // RECOMMENDATIONS: anyone signed in can suggest; only admin reads/moderates
+    match /recommendations/{rid} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // REPORTS: signed-in users can file; only admins read
+    match /reports/{rid} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
