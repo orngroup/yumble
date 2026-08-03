@@ -414,11 +414,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .switch.on i{left:21px}
 /* ---- Gender theme: men shift to blue; women & non-binary stay Yumble pink ---- */
 body.theme-blue{
-  --red:#2F7BF6;
-  --red-deep:#1E5FD0;
-  --red-dark:#123E8C;
-  --coral:#5B9CFF;
-  --coral-soft:#9BC2FF;
+  --red:#5B9BF0;
+  --red-deep:#4A86DB;
+  --red-dark:#3A6DB8;
+  --coral:#8FC0FF;
+  --coral-soft:#BEDBFF;
 }
 </style>
 <!-- Yumble Firebase integration (v9 modular) — real project yumble-90e68 -->
@@ -427,7 +427,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth, onAuthStateChanged, signOut,
   GoogleAuthProvider, FacebookAuthProvider, OAuthProvider,
-  signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword
+  signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  sendEmailVerification, reload
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
@@ -477,6 +478,16 @@ window.FF = {
     return res.user;
   },
   async signOut() { return signOut(auth); },
+  async sendVerifyEmail() {
+    if (auth.currentUser) { await sendEmailVerification(auth.currentUser); return true; }
+    return false;
+  },
+  async isEmailVerified() {
+    if (!auth.currentUser) return false;
+    await reload(auth.currentUser);
+    return auth.currentUser.emailVerified;
+  },
+  userEmail() { return auth.currentUser ? auth.currentUser.email : ""; },
   onAuth(cb) { onAuthStateChanged(auth, cb); },
   currentUid() { return auth.currentUser ? auth.currentUser.uid : null; },
 
@@ -917,12 +928,17 @@ route("onboard",()=>{
       <div style="background:var(--mist);border-radius:12px;padding:13px 15px;font-size:12px;color:var(--slate);line-height:1.5;margin-top:14px">Yumble verifies every member with a selfie and photo ID to keep the community genuine and safe. Your ID is checked securely and never shown to other users.</div>`;
     hideContinue=true;
   }else if(step==="otp"){
+    const email=(window.FF&&FF.userEmail&&FF.userEmail())||"your email";
     inner=`
-      <h1 class="big" style="margin-bottom:6px">Verify your number</h1>
-      <p class="h-sub" style="margin-bottom:8px">We've sent a 6-digit code by SMS to your phone. (Demo code: <b>123456</b>)</p>
-      <div class="field" style="margin-top:16px"><label>Mobile number *</label><input id="f_phone" type="tel" placeholder="+44…" value="+44 7700 900000"></div>
-      <div class="otp-row" id="otpRow">${[0,1,2,3,4,5].map(i=>`<input class="otp-box" maxlength="1" inputmode="numeric" data-i="${i}" oninput="otpInput(this)">`).join("")}</div>
-      <button class="link" style="color:var(--coral);margin-top:16px" onclick="toast('New code sent 📱')">Resend code</button>`;
+      <h1 class="big" style="margin-bottom:6px">Verify your email</h1>
+      <p class="h-sub" style="margin-bottom:18px">We've sent a verification link to <b>${email}</b>. Open it, then tap "I've verified" below.</p>
+      <div class="center" style="padding:10px 0">
+        <div style="width:76px;height:76px;border-radius:50%;background:var(--mist);display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:16px">✉️</div>
+        <button class="btn btn-coral" style="max-width:280px" onclick="checkEmailVerified()">I've verified my email</button>
+        <button class="link" style="color:var(--coral);margin-top:14px" onclick="resendVerifyEmail()">Resend email</button>
+        <p class="h-sub" style="margin-top:16px;font-size:12px">Didn't get it? Check spam, or resend. You can also continue and verify later.</p>
+        <button class="link" style="color:var(--slate);margin-top:6px;font-size:12px" onclick="obNext()">Skip for now →</button>
+      </div>`;
     hideContinue=true;
   }else if(step==="cuisine"){
     inner=`
@@ -995,7 +1011,7 @@ route("onboard",()=>{
   // step-specific footer button
   let footer;
   if(step==="terms") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="obNext()">Agree & continue</button>`;
-  else if(step==="otp") footer=`<button class="btn btn-coral" onclick="verifyOtp()">Verify code</button>`;
+  else if(step==="otp") footer="";
   else if(step==="selfie") footer=`<button class="btn btn-coral" onclick="obNext()">📸 Capture selfie</button>`;
   else if(step==="id") footer=`<button class="btn btn-coral" onclick="submitVerification()">📸 Scan ID & submit</button>`;
   else if(step==="details") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="saveDetails()">Continue</button>`;
@@ -1010,7 +1026,7 @@ route("onboard",()=>{
     <div class="scroll pad">${inner}</div>
     ${footer?`<div class="pad" style="padding-top:0">${footer}</div>`:""}`;
 });
-routes.onboard.after=(el)=>{ if(OB_STEPS[state.step]==="game") renderGame(); if(OB_STEPS[state.step]==="details") checkDetails(); };
+routes.onboard.after=(el)=>{ if(OB_STEPS[state.step]==="game") renderGame(); if(OB_STEPS[state.step]==="details") checkDetails(); if(OB_STEPS[state.step]==="otp" && routes.onboard.afterEmail) routes.onboard.afterEmail(); };
 
 /* onboarding validation + helpers */
 function checkDetails(){
@@ -1038,10 +1054,27 @@ function checkTerms(){
   me.agreedTerms=all;
 }
 function otpInput(el){const i=+el.dataset.i;if(el.value&&i<5){document.querySelector(`.otp-box[data-i="${i+1}"]`)?.focus();}}
-function verifyOtp(){
-  const code=[...document.querySelectorAll(".otp-box")].map(b=>b.value).join("");
-  if(code.length<6){toast("Enter the 6-digit code");return;}
-  toast("Number verified ✓");obNext();
+// Email verification (real, via Firebase)
+let _verifyEmailSent=false;
+routes.onboard.afterEmail=()=>{
+  // auto-send the verification email when we land on the step (once)
+  if(!_verifyEmailSent && window.FF && !FF.demo && FF.sendVerifyEmail){
+    _verifyEmailSent=true;
+    FF.sendVerifyEmail().then(()=>{}).catch(e=>console.warn("verify email",e));
+  }
+};
+function resendVerifyEmail(){
+  if(window.FF&&FF.sendVerifyEmail){FF.sendVerifyEmail().then(()=>toast("Verification email sent ✉️")).catch(()=>toast("Couldn't send — try again"));}
+  else toast("Email sending unavailable");
+}
+async function checkEmailVerified(){
+  if(!window.FF||FF.demo){obNext();return;}
+  toast("Checking…");
+  try{
+    const ok=await FF.isEmailVerified();
+    if(ok){me.emailVerified=true;toast("Email verified ✓");obNext();}
+    else toast("Not verified yet — open the email link first");
+  }catch(e){toast("Couldn't check — you can skip and verify later");}
 }
 function addPhoto(i){toast("Photo added (demo)");}
 function submitVerification(){
