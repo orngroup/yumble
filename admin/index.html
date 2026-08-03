@@ -90,7 +90,16 @@ window.ADMIN = {
   async getPending(){
     const q = query(collection(db, "users"), where("accountStatus","==","pending"));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    const out = [];
+    for(const d of snap.docs){
+      const user = { uid: d.id, ...d.data() };
+      try{
+        const vsnap = await getDoc(doc(db, "users", d.id, "private", "verification"));
+        if(vsnap.exists()) user.verification = vsnap.data();
+      }catch(e){}
+      out.push(user);
+    }
+    return out;
   },
   async setStatus(uid, status){
     await updateDoc(doc(db, "users", uid), { accountStatus: status });
@@ -153,7 +162,7 @@ window.dispatchEvent(new Event("admin-ready"));
         <div class="card-pad card" style="border-left:4px solid var(--red)">
           <h3 style="font-weight:800;margin-bottom:4px">⏳ Verification queue</h3>
           <p style="color:var(--slate);font-size:14px;margin-bottom:14px">New sign-ups awaiting approval. Approving lets them into the app.</p>
-          <table><thead><tr><th>Applicant</th><th>Age</th><th>Gender</th><th>Loves</th><th>Action</th></tr></thead>
+          <table><thead><tr><th>Applicant</th><th>Selfie</th><th>ID</th><th>Loves</th><th>Action</th></tr></thead>
           <tbody id="verifyRows"></tbody></table>
         </div>
         <div class="card"><table>
@@ -230,15 +239,20 @@ async function loadPendingQueue(){
   try{
     _pending=await window.ADMIN.getPending();
     if(_pending.length===0){tbody.innerHTML='<tr><td colspan="5" style="color:#9AA3B0">No sign-ups waiting. 🎉</td></tr>';return;}
-    tbody.innerHTML=_pending.map((v,i)=>`<tr id="vq${i}">
-      <td><b>${v.name||'(no name)'}</b><br><span style="font-size:11px;color:#9AA3B0">${v.uid.slice(0,10)}…</span></td>
-      <td>${v.age||'–'}</td>
-      <td>${(v.gender||'–')}</td>
-      <td>${(v.cuisines||[]).slice(0,3).join(', ')||'–'}</td>
-      <td>
-        <button class="btn btn-teal" style="padding:6px 12px;font-size:13px" onclick="approveUser(${i})">✓ Approve</button>
-        <button class="btn btn-danger" style="padding:6px 12px;font-size:13px" onclick="rejectUser(${i})">Reject</button>
-      </td></tr>`).join("");
+    tbody.innerHTML=_pending.map((v,i)=>{
+      const ver=v.verification||{};
+      const selfie=ver.selfie?`<a href="${ver.selfie}" target="_blank"><img src="${ver.selfie}" style="width:46px;height:46px;object-fit:cover;border-radius:8px"></a>`:'<span style="color:#C0392B">none</span>';
+      const id=ver.id?`<a href="${ver.id}" target="_blank"><img src="${ver.id}" style="width:60px;height:40px;object-fit:cover;border-radius:6px"></a>`:'<span style="color:#C0392B">none</span>';
+      return `<tr id="vq${i}">
+        <td><b>${v.name||'(no name)'}</b><br><span style="font-size:11px;color:#9AA3B0">age ${v.age||'–'} · ${v.gender||'–'}</span></td>
+        <td>${selfie}</td>
+        <td>${id}</td>
+        <td>${(v.cuisines||[]).slice(0,3).join(', ')||'–'}</td>
+        <td>
+          <button class="btn btn-teal" style="padding:6px 12px;font-size:13px" onclick="approveUser(${i})">✓ Approve</button>
+          <button class="btn btn-danger" style="padding:6px 12px;font-size:13px" onclick="rejectUser(${i})">Reject</button>
+        </td></tr>`;
+    }).join("");
   }catch(e){
     console.error(e);
     tbody.innerHTML='<tr><td colspan="5" style="color:#D6155E">Couldn\'t load queue. Are you an admin? ('+(e.message||e)+')</td></tr>';

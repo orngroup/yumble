@@ -56,8 +56,17 @@ body{
   overflow:hidden;
   box-shadow:var(--shadow-lg);
 }
-@media(min-width:460px) and (min-height:960px){
-  #device{border-radius:44px;border:12px solid #0d0d10;height:900px}
+/* Tablet / iPad / desktop: show as a centered phone with a device frame */
+@media(min-width:600px){
+  body{background:radial-gradient(circle at 50% 0%,#3a3d44,#1a1c20)}
+  #device{
+    width:420px;height:min(900px,94vh);
+    border-radius:46px;border:13px solid #0d0d10;
+    box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,255,.04);
+  }
+}
+@media(min-width:600px) and (min-height:960px){
+  #device{height:900px}
 }
 #screens{position:absolute;inset:0}
 .screen{
@@ -430,13 +439,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth, onAuthStateChanged, signOut,
   GoogleAuthProvider, FacebookAuthProvider, OAuthProvider,
-  signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   sendEmailVerification, reload
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
   query, where, orderBy, limit, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQqPhlUe7LZU7z_GhZx0ZZEd_yZ5Wk-uU",
@@ -453,6 +464,7 @@ const USE_PLACES = false;         // seed venues for now
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 function miles(a, b) {
   const R = 3959, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
@@ -472,8 +484,17 @@ window.FF = {
     else if (providerName === "facebook") provider = new FacebookAuthProvider();
     else if (providerName === "apple") provider = new OAuthProvider("apple.com");
     else throw new Error("Unknown provider");
-    const res = await signInWithPopup(auth, provider);
-    return res.user;
+    try {
+      const res = await signInWithPopup(auth, provider);
+      return res.user;
+    } catch (e) {
+      // COOP or popup-blocked → fall back to full-page redirect
+      if (e && (String(e.code||"").includes("popup") || String(e.message||"").includes("Cross-Origin"))) {
+        await signInWithRedirect(auth, provider);
+        return null; // page will redirect; result handled on return
+      }
+      throw e;
+    }
   },
   async signInEmail(email, pw, isNew) {
     const fn = isNew ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
@@ -498,6 +519,18 @@ window.FF = {
     const uid = auth.currentUser.uid;
     await setDoc(doc(db, "users", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
     return true;
+  },
+  // Upload a dataURL image (selfie/id/photo) to Storage, return its URL
+  async uploadImage(kind, dataUrl) {
+    const uid = auth.currentUser.uid;
+    const path = `uploads/${uid}/${kind}_${Date.now()}.jpg`;
+    const r = storageRef(storage, path);
+    await uploadString(r, dataUrl, "data_url");
+    const url = await getDownloadURL(r);
+    // record the URL on the user's private doc (admin-readable)
+    await setDoc(doc(db, "users", uid, "private", "verification"),
+      { [kind]: url, [kind + "At"]: serverTimestamp() }, { merge: true });
+    return url;
   },
   async getProfile(uid) {
     const snap = await getDoc(doc(db, "users", uid || auth.currentUser.uid));
@@ -551,6 +584,10 @@ window.FF = {
 // Signal readiness + report auth state to the app
 FF.ready = true;
 window.dispatchEvent(new Event("ff-ready"));
+// If we returned from a redirect sign-in, complete it
+getRedirectResult(auth).then((res)=>{
+  if(res && res.user && window.afterSignIn){ window.afterSignIn(res.user); }
+}).catch(()=>{});
 onAuthStateChanged(auth, (user) => {
   FF.user = user;
   if (window.onFirebaseAuth) window.onFirebaseAuth(user);
@@ -801,6 +838,7 @@ function facebookSignup(){toast("Facebook sign-in coming soon");}
 async function emailSignup(){ go("emailAuth"); }
 
 // After any successful sign-in: load profile → route by status
+window.afterSignIn = afterSignIn;
 async function afterSignIn(user){
   if(user&&user.displayName)me.name=user.displayName.split(" ")[0];
   try{
@@ -887,7 +925,7 @@ function returningLogin(){
 route("loginDemo",()=>`
   <div class="scroll center red-bg" style="padding:40px 30px;color:#fff">
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%">
-      <div class="brandmark" style="font-size:40px">Yumble</div>
+      <img src="wordmark-white.png" alt="Yumble" style="height:38px;width:auto;margin:0 auto;display:block">
       <p style="opacity:.9;margin:20px 0 24px;text-align:center">Welcome back! (Demo — choose a state to preview)</p>
       <button class="btn btn-white" style="margin-bottom:12px" onclick="me.accountStatus='approved';me.name='Alex';me.gender='Woman';applyTheme();returningLogin()">✓ Approved (she/her) → pink view</button>
       <button class="btn btn-white" style="margin-bottom:12px;background:#2F7BF6;color:#fff" onclick="me.accountStatus='approved';me.name='Sam';me.gender='Man';applyTheme();returningLogin()">✓ Approved (he/him) → blue view</button>
@@ -966,20 +1004,23 @@ route("onboard",()=>{
     inner=`
       <h1 class="big" style="margin-bottom:6px">Add your photos</h1>
       <p class="h-sub" style="margin-bottom:20px">At least one photo is required. Clear face photos get the best matches.</p>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(this,0)">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        ${[0,1,2,3,4,5].map(i=>`<div onclick="addPhoto(${i})" style="aspect-ratio:3/4;border-radius:14px;background:${i===0?'#ddd':'var(--mist)'};display:flex;align-items:center;justify-content:center;color:#B7BFC9;font-size:26px;border:2px dashed ${i===0?'transparent':'#D6DCE3'};overflow:hidden;cursor:pointer">${i===0?'<img src="img/p6.jpg" style="width:100%;height:100%;object-fit:cover">':'＋'}</div>`).join("")}
+        ${[0,1,2,3,4,5].map(i=>`<div id="photoCell${i}" onclick="document.getElementById('photoInput').click()" style="aspect-ratio:3/4;border-radius:14px;background:var(--mist);display:flex;align-items:center;justify-content:center;color:#B7BFC9;font-size:26px;border:2px dashed #D6DCE3;overflow:hidden;cursor:pointer">＋</div>`).join("")}
       </div>
-      <p class="h-sub" style="margin-top:14px">✓ 1 photo added — you can add more later.</p>`;
+      <p class="h-sub" id="photoStatus" style="margin-top:14px">Tap a box to add a photo.</p>`;
   }else if(step==="selfie"){
     inner=`
       <h1 class="big" style="margin-bottom:6px">Verification: selfie</h1>
       <p class="h-sub" style="margin-bottom:20px">Take a live selfie so we can confirm you're a real person. Required for everyone's safety.</p>
+      <input type="file" id="selfieInput" accept="image/*" style="display:none" onchange="handleVerifyUpload(this,'selfie')">
       <div class="center">
-        <div style="width:210px;height:270px;border-radius:20px;background:#12141a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        <div id="selfiePreview" onclick="document.getElementById('selfieInput').click()" style="width:210px;height:270px;border-radius:20px;background:#12141a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer">
           <div style="width:145px;height:185px;border:3px dashed rgba(255,255,255,.4);border-radius:50%"></div>
-          <div style="position:absolute;bottom:14px;color:#fff;font-size:12px;opacity:.8">Position your face in the oval</div>
+          <div style="position:absolute;bottom:14px;color:#fff;font-size:12px;opacity:.8">Tap to take your selfie</div>
         </div>
-      </div>`;
+      </div>
+      <p class="h-sub center" id="selfieStatus" style="margin-top:14px"></p>`;
     hideContinue=true;
   }else if(step==="id"){
     inner=`
@@ -988,13 +1029,15 @@ route("onboard",()=>{
       <div class="chips" style="justify-content:center;margin-bottom:18px">
         <span class="chip on">Passport</span><span class="chip">Driving licence</span><span class="chip">ID card</span>
       </div>
+      <input type="file" id="idInput" accept="image/*" style="display:none" onchange="handleVerifyUpload(this,'id')">
       <div class="center">
-        <div style="width:260px;height:165px;border-radius:16px;background:#F4F6F8;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div id="idPreview" onclick="document.getElementById('idInput').click()" style="width:260px;height:165px;border-radius:16px;background:#F4F6F8;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden">
           <div style="font-size:38px">🪪</div>
-          <div style="font-size:12px;color:var(--slate);margin-top:6px">Tap to scan your ID</div>
+          <div style="font-size:12px;color:var(--slate);margin-top:6px">Tap to photograph your ID</div>
         </div>
       </div>
-      <div style="background:#FFF6F6;border:1px solid #F8D7D7;border-radius:12px;padding:12px 15px;font-size:12px;color:var(--red-dark);margin-top:18px;line-height:1.5">🔒 Your ID is used once to verify your identity and age, then securely stored by our verification partner — never visible to other members.</div>`;
+      <p class="h-sub center" id="idStatus" style="margin-top:10px"></p>
+      <div style="background:#FFF6F6;border:1px solid #F8D7D7;border-radius:12px;padding:12px 15px;font-size:12px;color:var(--red-dark);margin-top:18px;line-height:1.5">🔒 Your ID is used once to verify your identity and age, then securely stored — never visible to other members.</div>`;
     hideContinue=true;
   }else if(step==="submitting"){
     inner="";
@@ -1014,15 +1057,15 @@ route("onboard",()=>{
   let footer;
   if(step==="terms") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="obNext()">Agree & continue</button>`;
   else if(step==="otp") footer="";
-  else if(step==="selfie") footer=`<button class="btn btn-coral" onclick="obNext()">📸 Capture selfie</button>`;
-  else if(step==="id") footer=`<button class="btn btn-coral" onclick="submitVerification()">📸 Scan ID & submit</button>`;
+  else if(step==="selfie") footer=`<button class="btn btn-coral" id="selfieNext" style="opacity:.5" onclick="requireSelfie()">Continue</button>`;
+  else if(step==="id") footer=`<button class="btn btn-coral" id="idNext" style="opacity:.5" onclick="requireId()">Submit for review</button>`;
   else if(step==="details") footer=`<button class="btn btn-coral" id="obBtn" disabled style="opacity:.5" onclick="saveDetails()">Continue</button>`;
   else if(step==="game") footer="";
   else footer=`<button class="btn btn-coral" onclick="obNext()">Continue</button>`;
 
   return `
     <div class="appbar"><button class="back" onclick="obBack()">‹</button>
-      <div class="script">Yumble</div><div class="spacer"></div>
+      <img src="wordmark-white.png" alt="Yumble" style="height:22px;width:auto"><div class="spacer"></div>
       <span style="font-size:12px;font-weight:700;opacity:.85">${state.step+1}/${OB_STEPS.length-1}</span></div>
     <div style="padding:0 22px"><div class="prog dark" style="margin:16px 0 4px"><i style="width:${pct}%"></i></div></div>
     <div class="scroll pad">${inner}</div>
@@ -1078,7 +1121,33 @@ async function checkEmailVerified(){
     else toast("Not verified yet — open the email link first");
   }catch(e){toast("Couldn't check — you can skip and verify later");}
 }
-function addPhoto(i){toast("Photo added (demo)");}
+// ---- Real image uploads (photo / selfie / ID) ----
+function _readFile(input){return new Promise((res,rej)=>{const f=input.files&&input.files[0];if(!f){rej();return;}const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});}
+async function handlePhotoUpload(input,i){
+  try{
+    const dataUrl=await _readFile(input);
+    const cell=document.getElementById('photoCell'+i);
+    if(cell){cell.innerHTML=`<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover">`;cell.style.border='none';}
+    const st=document.getElementById('photoStatus');if(st)st.textContent='Uploading…';
+    if(window.FF&&!FF.demo&&FF.currentUid()){const url=await FF.uploadImage('photo'+i,dataUrl);me.photos=me.photos||[];me.photos.push(url);}
+    if(st)st.textContent='✓ Photo added';
+  }catch(e){toast('Could not add photo');}
+}
+let _selfieDone=false,_idDone=false;
+async function handleVerifyUpload(input,kind){
+  try{
+    const dataUrl=await _readFile(input);
+    const prev=document.getElementById(kind+'Preview');
+    if(prev){prev.innerHTML=`<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover">`;}
+    const st=document.getElementById(kind+'Status');if(st)st.textContent='Uploading securely…';
+    if(window.FF&&!FF.demo&&FF.currentUid()){await FF.uploadImage(kind,dataUrl);}
+    if(st){st.textContent='✓ '+(kind==='selfie'?'Selfie':'ID')+' uploaded';st.style.color='var(--teal)';}
+    if(kind==='selfie'){_selfieDone=true;const b=document.getElementById('selfieNext');if(b)b.style.opacity=1;}
+    if(kind==='id'){_idDone=true;const b=document.getElementById('idNext');if(b)b.style.opacity=1;}
+  }catch(e){toast('Upload failed — try again');}
+}
+function requireSelfie(){if(!_selfieDone){toast('Please take your selfie first');return;}obNext();}
+function requireId(){if(!_idDone){toast('Please photograph your ID first');return;}submitVerification();}
 function submitVerification(){
   me.accountStatus="pending";
   go("onboard"); // shows submitting spinner
@@ -1240,7 +1309,7 @@ function updateNavBadges(){
 function tabDiscover(){
   return `
     <div class="feed-topbar">
-      <div class="script" style="font-size:22px">Yumble</div><div style="flex:1"></div>
+      <img src="wordmark-white.png" alt="Yumble" style="height:24px;width:auto"><div style="flex:1"></div>
       <button class="feed-top-btn" onclick="switchTab('tonight')" title="Eat Tonight">🟢</button>
       <button class="feed-top-btn" onclick="openPassport()" title="Passport">🎫</button>
     </div>
