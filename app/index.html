@@ -412,6 +412,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .switch.on{background:var(--teal)}
 .switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .switch.on i{left:21px}
+/* ---- Gender theme: men shift to blue; women & non-binary stay Yumble pink ---- */
+body.theme-blue{
+  --red:#2F7BF6;
+  --red-deep:#1E5FD0;
+  --red-dark:#123E8C;
+  --coral:#5B9CFF;
+  --coral-soft:#9BC2FF;
+}
 </style>
 </head>
 <body>
@@ -434,6 +442,18 @@ const me = { name:"You", cuisines:["Italian","Japanese","Lebanese"], diets:["Hal
   taste:{spice:2,adventure:2,sweet:1,dining:1}, // 0-3 scales; set by the food game
   foodieType:"Explorer", badges:["verified"], cuisinesTried:3 };
 // taste axes: spice(mild→fire), adventure(comfort→adventurous), sweet(savoury→sweettooth), dining(homecook→restaurant)
+
+/* ---- Gender theme: men=blue, women & non-binary=pink ---- */
+function applyTheme(){
+  const male = (me.gender||"").toLowerCase()==="man";
+  document.body.classList.toggle("theme-blue", male);
+}
+// Demo helper: lets you flip the theme live to show the feature
+function demoToggleTheme(){
+  me.gender = (me.gender||"").toLowerCase()==="man" ? "Woman" : "Man";
+  applyTheme();
+  toast(me.gender==="Man" ? "Men's view — blue 💙" : "Women's view — pink 💗");
+}
 
 const FOODIES = [
   {id:1,name:"Amara",age:27,dist:"1.2 mi",looking:"Relationship",verified:true,
@@ -598,6 +618,7 @@ route("welcome",()=>`
       <img src="wordmark-white.png" alt="Yumble" style="height:56px;width:auto;margin:0 auto;display:block">
       <div class="tag" style="margin-top:10px">LOVE <b>FOOD</b> . LOVE <b>LIFE</b></div>
       <p style="color:#fff;font-size:20px;font-weight:600;margin-top:46px;opacity:.95">Are you hungry<br>for love?</p>
+      <p style="color:#fff;font-size:13px;margin-top:10px;opacity:.85">Find someone yummy. Fall in love over food. 😋</p>
     </div>
     <div style="width:100%">
       <button class="btn btn-white" onclick="go('signup')">Get started</button>
@@ -675,7 +696,8 @@ route("loginDemo",()=>`
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%">
       <div class="brandmark" style="font-size:40px">Yumble</div>
       <p style="opacity:.9;margin:20px 0 24px;text-align:center">Welcome back! (Demo — choose a state to preview)</p>
-      <button class="btn btn-white" style="margin-bottom:12px" onclick="me.accountStatus='approved';me.name='Alex';returningLogin()">✓ Approved account → go to swiping</button>
+      <button class="btn btn-white" style="margin-bottom:12px" onclick="me.accountStatus='approved';me.name='Alex';me.gender='Woman';applyTheme();returningLogin()">✓ Approved (she/her) → pink view</button>
+      <button class="btn btn-white" style="margin-bottom:12px;background:#2F7BF6;color:#fff" onclick="me.accountStatus='approved';me.name='Sam';me.gender='Man';applyTheme();returningLogin()">✓ Approved (he/him) → blue view</button>
       <button class="btn btn-ghost" onclick="me.accountStatus='pending';me.name='Alex';go('verifyPending')">⏳ Still-in-review account</button>
     </div>
     <button class="link" style="color:#fff" onclick="go('welcome')">Back</button>
@@ -825,6 +847,7 @@ function checkDetails(){
 function saveDetails(){
   me.name=document.getElementById("f_name").value.trim()||"You";
   me.gender=document.getElementById("f_gender").value;
+  applyTheme();
   me.lookingFor=document.getElementById("f_looking").value;
   const dob=document.getElementById("f_dob").value;if(dob)me.age=Math.floor((Date.now()-new Date(dob))/(365.25*24*3600*1000));
   obNext();
@@ -1005,8 +1028,8 @@ function initDeck(){
   const list=FOODIES.filter(f=>!state.liked.includes(f.id)&&!state.passed.includes(f.id));
   if(list.length===0){
     feed.innerHTML=`<div class="feed-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;background:linear-gradient(160deg,var(--red),var(--red-deep))">
-      <div style="font-size:48px;margin-bottom:14px">🍽️</div><b style="font-size:19px">That's everyone nearby</b>
-      <p style="margin-top:8px;opacity:.85">New Foodies join every day — check back soon.</p>
+      <div style="font-size:48px;margin-bottom:14px">🍽️</div><b style="font-size:19px">You've seen all the yummy ones nearby</b>
+      <p style="margin-top:8px;opacity:.85">Fresh faces get added daily — don't fumble it, check back soon. 😋</p>
       <button class="btn btn-white btn-sm" style="margin-top:18px;width:auto" onclick="resetDeck()">Start over</button></div>`;
     return;
   }
@@ -1062,7 +1085,7 @@ function showMatch(f){
   ov.innerHTML=`
     ${Array.from({length:18}).map(()=>{const c=['#fff','#F6D488','#F79A9A','#12B5A5'][Math.floor(Math.random()*4)];return `<span class="confetti" style="left:${Math.random()*100}%;background:${c};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()}s"></span>`}).join("")}
     <div class="script" style="font-size:40px;color:#fff">It's a Match!</div>
-    <p style="opacity:.9;margin-top:6px;font-size:14px">You and ${f.name} both love ${shared(me.cuisines,f.cuisines).join(" & ")}</p>
+    <p style="opacity:.9;margin-top:6px;font-size:14px">Looks like you're about to fumble in love — you and ${f.name} both love ${shared(me.cuisines,f.cuisines).join(" & ")}</p>
     <div class="match-photos">
       <img class="mp" src="img/p6.jpg">
       <img class="mp" src="${f.img}">
@@ -1458,6 +1481,7 @@ function tabProfile(){
         <div class="menu-row" onclick="go('plans')"><span class="ic">👑</span> Membership <span class="ar">›</span></div>
         <div class="menu-row" onclick="doInstall()"><span class="ic">📲</span> Install Yumble app <span class="ar">›</span></div>
         <div class="menu-row" onclick="manualNotif()"><span class="ic">🔔</span> Notifications <span class="ar">›</span></div>
+        <div class="menu-row" onclick="demoToggleTheme()"><span class="ic">🎨</span> Switch theme (demo: blue / pink) <span class="ar">›</span></div>
         <div class="menu-row" onclick="go('recommend')"><span class="ic">➕</span> Recommend a restaurant <span class="ar">›</span></div>
         <div class="menu-row" onclick="go('safety',{})"><span class="ic">🛡️</span> Safety centre <span class="ar">›</span></div>
         <div class="menu-row" onclick="go('about',{})"><span class="ic">💬</span> Help &amp; contact <span class="ar">›</span></div>
