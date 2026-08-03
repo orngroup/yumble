@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FA257D">
+<title>Yumble — Love Food. Love Life.</title>
+<meta name="description" content="The dating app that matches you on food. Meet people who share your taste, then find the perfect place to eat.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--red:#FA257D;--red-deep:#C41560;--ink:#1C2430;--slate:#5A6472;--mist:#F4F6F8;--line:#E4E8ED;--coral:#F26D6D;--teal:#12B5A5}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-height:1.6}
+.script{font-family:'Pacifico',cursive}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.btn{display:inline-block;border:0;border-radius:14px;font:inherit;font-weight:700;font-size:15px;padding:13px 24px;cursor:pointer;transition:transform .12s,filter .2s}
+.btn:active{transform:scale(.97)}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{filter:brightness(1.08)}
+.btn-white{background:#fff;color:var(--red)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.55)}
+.btn-dark{background:var(--ink);color:#fff}
+
+/* ---- top nav with USER LOGIN ---- */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{width:38px;height:38px;border-radius:10px}
+.logo .script{font-size:26px;color:var(--red)}
+.nav-links{display:flex;align-items:center;gap:28px;font-weight:600;font-size:15px}
+.nav-links a{color:var(--slate)}.nav-links a:hover{color:var(--ink)}
+.nav-cta{display:flex;align-items:center;gap:12px}
+.login-link{font-weight:700;color:var(--ink)}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* ---- hero ---- */
+.hero{background:linear-gradient(160deg,var(--red),var(--red-deep));color:#fff;padding:80px 0 90px;position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;position:relative;z-index:2}
+.hero h1{font-size:56px;font-weight:900;line-height:1.05;letter-spacing:-1px}
+.hero .tag{letter-spacing:3px;font-size:13px;font-weight:800;opacity:.9;margin-bottom:18px}
+.hero p.sub{font-size:19px;opacity:.95;margin:20px 0 30px;max-width:460px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.store-badges{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.store-badges .b{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:8px}
+.phone-mock{justify-self:center;width:280px;height:570px;background:#000;border-radius:38px;padding:10px;box-shadow:0 40px 80px rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.15)}
+.phone-mock iframe{width:100%;height:100%;border:0;border-radius:30px;background:#fff}
+@media(max-width:860px){.hero .wrap{grid-template-columns:1fr;text-align:center}.hero h1{font-size:42px}.hero-cta,.store-badges{justify-content:center}.phone-mock{display:none}}
+
+/* ---- how it works ---- */
+section{padding:80px 0}
+.sec-head{text-align:center;max-width:640px;margin:0 auto 54px}
+.sec-head h2{font-size:38px;font-weight:800;letter-spacing:-.5px}
+.sec-head p{font-size:18px;color:var(--slate);margin-top:12px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.step{text-align:center;padding:28px 18px;border:1px solid var(--line);border-radius:22px;background:#fff}
+.step .n{width:54px;height:54px;border-radius:50%;background:#FFECEC;color:var(--red);font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.step h3{font-size:17px;font-weight:800;margin-bottom:6px}
+.step p{font-size:14px;color:var(--slate)}
+@media(max-width:860px){.steps{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.steps{grid-template-columns:1fr}}
+
+/* ---- features ---- */
+.features{background:var(--mist)}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.fcard{background:#fff;border-radius:20px;padding:28px;border:1px solid var(--line)}
+.fcard .ic{font-size:32px;margin-bottom:14px}
+.fcard h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.fcard p{font-size:14.5px;color:var(--slate)}
+@media(max-width:860px){.fgrid{grid-template-columns:1fr}}
+
+/* ---- CTA band ---- */
+.cta-band{background:linear-gradient(135deg,var(--ink),#2b3546);color:#fff;text-align:center}
+.cta-band h2{font-size:36px;font-weight:800}
+.cta-band p{font-size:18px;opacity:.85;margin:12px 0 28px}
+
+/* ---- footer with PARTNER LINKS ---- */
+footer{background:var(--ink);color:#cdd4dd;padding:56px 0 30px;font-size:14.5px}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;margin-bottom:40px}
+.foot-grid h4{color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.foot-grid a{display:block;color:#aeb6c1;margin-bottom:9px}
+.foot-grid a:hover{color:#fff}
+.foot-brand .script{font-size:28px;color:#fff}
+.foot-brand p{margin-top:10px;max-width:280px;color:#8b95a3}
+.foot-bottom{border-top:1px solid #2e3947;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#8b95a3;font-size:13px}
+.partner-badge{display:inline-block;background:#2e3947;color:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;margin-left:8px}
+@media(max-width:760px){.foot-grid{grid-template-columns:1fr 1fr}.foot-brand{grid-column:1/-1}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="/"><img src="wordmark.png" alt="Yumble" style="height:34px;width:auto"></a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#download">Get the app</a>
+    </nav>
+    <!-- USER LOGIN AT THE TOP -->
+    <div class="nav-cta">
+      <a href="app/" class="login-link">Log in</a>
+      <a href="app/" class="btn btn-red">Join free</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="tag">LOVE FOOD . LOVE LIFE</div>
+      <h1>Dating that starts<br>with dinner.</h1>
+      <p class="sub">Yumble matches you on the food you love — then helps you find the perfect place to eat together. No more "where shall we go?"</p>
+      <div class="hero-cta">
+        <a href="app/" class="btn btn-white">Join free — founding member</a>
+        <a href="#how" class="btn btn-ghost">See how it works</a>
+      </div>
+      <div class="store-badges">
+        <span class="b">▶ Google Play — coming soon</span>
+        <span class="b"> App Store — coming soon</span>
+      </div>
+    </div>
+    <div class="phone-mock">
+      <iframe src="app/" title="Yumble app preview" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>How Yumble works</h2>
+      <p>Four steps from hungry to happily matched.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">🍴</div><h3>Take the taste test</h3><p>A quick game builds your Taste Profile — spice, adventure, sweet tooth and more.</p></div>
+      <div class="step"><div class="n">💘</div><h3>Match on flavour</h3><p>We pair you with people who share your cuisines, with a live Flavour Match %.</p></div>
+      <div class="step"><div class="n">🍽️</div><h3>Find your place</h3><p>We suggest venues that suit you both — with offers from partner restaurants.</p></div>
+      <div class="step"><div class="n">🍰</div><h3>Book & meet</h3><p>Book a table in-app, meet face to face, and — obviously — order dessert.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Why Foodies is different</h2>
+      <p>Not another swipe app. A food app that happens to match you with people.</p>
+    </div>
+    <div class="fgrid">
+      <div class="fcard"><div class="ic">🎯</div><h3>Flavour Match %</h3><p>Compatibility built on taste, not just photos. See how well your palates align before you say hello.</p></div>
+      <div class="fcard"><div class="ic">🍽️</div><h3>Real venues & offers</h3><p>Discover restaurants across your city with member offers, dietary filters, map search and one-tap booking.</p></div>
+      <div class="fcard"><div class="ic">🟢</div><h3>Eat Tonight</h3><p>See Foodies free to eat tonight near you. Spontaneous, no three-week text marathon.</p></div>
+      <div class="fcard"><div class="ic">🥂</div><h3>Meet-ups</h3><p>Join group dining tables — great for new friends and low-pressure evenings.</p></div>
+      <div class="fcard"><div class="ic">🛡️</div><h3>Safe by design</h3><p>Video dates before you meet, share-your-plan, meet in public venues, block & report.</p></div>
+      <div class="fcard"><div class="ic">🎫</div><h3>Foodie Passport</h3><p>Earn badges and levels as you match, book and explore new cuisines.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="download" class="cta-band">
+  <div class="wrap">
+    <h2>Hungry for love?</h2>
+    <p>Join free as a founding member — no charge for your first 3 months.</p>
+    <a href="app/" class="btn btn-white">Open the app</a>
+  </div>
+</section>
+
+<!-- FOOTER with PARTNER LINKS at the bottom -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <img src="wordmark-white.png" alt="Yumble" style="height:30px;width:auto;margin-bottom:6px">
+        <p>The dating app that matches you on food. Love Food. Love Life.</p>
+      </div>
+      <div>
+        <h4>Yumble</h4>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="app/">Get the app</a>
+        <a href="app/">Log in</a>
+      </div>
+      <div>
+        <h4>For Partners</h4>
+        <a href="portal/">Restaurant login <span class="partner-badge">Partners</span></a>
+        <a href="portal/">List your restaurant</a>
+        <a href="portal/">Host an event</a>
+        <a href="mailto:partners@yumble.app">Partner enquiries</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="mailto:hello@yumble.app">Contact</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="admin/">Admin</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Yumble. All rights reserved.</span>
+      <span>hello@yumble.app · www.yumble.app</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
+  <!-- Yumble y-heart: heart lobes at top, tail curving down-left like a lowercase y -->
+  <path d="M170 172
+           C 134 172, 116 208, 134 244
+           C 148 272, 188 292, 216 302
+           L 256 316
+           L 296 302
+           C 324 292, 364 272, 378 244
+           C 396 208, 378 172, 342 172
+           C 312 172, 286 194, 272 222
+           C 266 234, 258 244, 256 248
+           C 254 244, 246 234, 240 222
+           C 226 194, 200 172, 170 172 Z"
+        fill="#D6155E"/>
+  <path d="M256 300
+           C 258 344, 252 380, 232 404
+           C 216 423, 190 428, 168 416"
+        fill="none" stroke="#D6155E" stroke-width="54" stroke-linecap="round"/>
+</svg>
