@@ -421,6 +421,128 @@ body.theme-blue{
   --coral-soft:#9BC2FF;
 }
 </style>
+<!-- Yumble Firebase integration (v9 modular) — real project yumble-90e68 -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut,
+  GoogleAuthProvider, FacebookAuthProvider, OAuthProvider,
+  signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+  query, where, orderBy, limit, serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQqPhlUe7LZU7z_GhZx0ZZEd_yZ5Wk-uU",
+  authDomain: "yumble-90e68.firebaseapp.com",
+  projectId: "yumble-90e68",
+  storageBucket: "yumble-90e68.firebasestorage.app",
+  messagingSenderId: "1005262617436",
+  appId: "1:1005262617436:web:febc18a774faf336189f99"
+};
+
+const DEMO_MODE = false;          // LIVE
+const USE_PLACES = false;         // seed venues for now
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function miles(a, b) {
+  const R = 3959, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+  const la1 = a.lat * Math.PI / 180, la2 = b.lat * Math.PI / 180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(x));
+}
+
+window.FF = {
+  demo: DEMO_MODE,
+  ready: false,
+  user: null,
+
+  async signIn(providerName) {
+    let provider;
+    if (providerName === "google") provider = new GoogleAuthProvider();
+    else if (providerName === "facebook") provider = new FacebookAuthProvider();
+    else if (providerName === "apple") provider = new OAuthProvider("apple.com");
+    else throw new Error("Unknown provider");
+    const res = await signInWithPopup(auth, provider);
+    return res.user;
+  },
+  async signInEmail(email, pw, isNew) {
+    const fn = isNew ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
+    const res = await fn(auth, email, pw);
+    return res.user;
+  },
+  async signOut() { return signOut(auth); },
+  onAuth(cb) { onAuthStateChanged(auth, cb); },
+  currentUid() { return auth.currentUser ? auth.currentUser.uid : null; },
+
+  async saveProfile(data) {
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, "users", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    return true;
+  },
+  async getProfile(uid) {
+    const snap = await getDoc(doc(db, "users", uid || auth.currentUser.uid));
+    return snap.exists() ? snap.data() : null;
+  },
+
+  async getVenues({ lat, lng, radiusMiles = 5, max = 60 } = {}) {
+    const snap = await getDocs(query(collection(db, "venues"), limit(400)));
+    let list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    if (lat && lng) {
+      list = list.map(v => ({ ...v, d: miles({ lat, lng }, { lat: v.lat, lng: v.lng }) }))
+                 .filter(v => v.d <= radiusMiles).sort((a, b) => a.d - b.d);
+    }
+    return list.slice(0, max);
+  },
+  async searchPlaces(queryText) {
+    const all = window.LONDON_VENUES || [];
+    const q = (queryText||"").toLowerCase();
+    return all.filter(v => v.name.toLowerCase().includes(q) || v.area.toLowerCase().includes(q) ||
+      v.cuisines.some(c => c.toLowerCase().includes(q))).slice(0, 40);
+  },
+
+  async recordLike(toUid) {
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, "likes", `${uid}_${toUid}`), { from: uid, to: toUid, at: serverTimestamp() });
+    const recip = await getDoc(doc(db, "likes", `${toUid}_${uid}`));
+    if (recip.exists()) {
+      const mid = [uid, toUid].sort().join("_");
+      await setDoc(doc(db, "matches", mid), { users: [uid, toUid].sort(), at: serverTimestamp() });
+      return { matched: true, matchId: mid };
+    }
+    return { matched: false };
+  },
+  async sendMessage(matchId, text) {
+    await addDoc(collection(db, "messages", matchId, "items"),
+      { from: auth.currentUser.uid, text, at: serverTimestamp() });
+  },
+  watchMessages(matchId, cb) {
+    return onSnapshot(query(collection(db, "messages", matchId, "items"), orderBy("at")), snap => {
+      cb(snap.docs.map(d => d.data()));
+    });
+  },
+  async createBooking(b) {
+    await addDoc(collection(db, "bookings"), { ...b, uid: auth.currentUser.uid, at: serverTimestamp() });
+  },
+  async recommendVenue(v) {
+    await addDoc(collection(db, "recommendations"), { ...v, by: auth.currentUser?.uid || "anon", at: serverTimestamp() });
+  }
+};
+
+// Signal readiness + report auth state to the app
+FF.ready = true;
+window.dispatchEvent(new Event("ff-ready"));
+onAuthStateChanged(auth, (user) => {
+  FF.user = user;
+  if (window.onFirebaseAuth) window.onFirebaseAuth(user);
+});
+</script>
+
 </head>
 <body>
 <div id="device">
@@ -429,7 +551,6 @@ body.theme-blue{
 </div>
 
 <script src="venues.js"></script>
-<script src="firebase-config.js"></script>
 <script>
 
 // ---- Sample data ---------------------------------------------------
@@ -623,6 +744,7 @@ route("welcome",()=>`
     <div style="width:100%">
       <button class="btn btn-white" onclick="go('signup')">Get started</button>
       <button class="link" style="color:#fff;margin-top:18px;width:100%" onclick="returningLogin()">I already have an account</button>
+      <div id="ffStatus" style="color:rgba(255,255,255,.6);font-size:11px;margin-top:14px;text-align:center">Connecting to Yumble…</div>
     </div>
   </div>`);
 routes.welcome.red=true;
@@ -639,18 +761,76 @@ route("signup",()=>`
         <span style="font-size:18px"></span> Continue with Apple</button>
       <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
         <span style="font-size:18px">📷</span> Continue with Instagram</button>
-      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
+      <button class="btn btn-white" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="facebookSignup()">
         <span style="color:#1877F2;font-size:18px">f</span> Continue with Facebook</button>
-      <button class="btn btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:10px" onclick="startOnboard()">
+      <button class="btn btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:10px" onclick="emailSignup()">
         ✉️ Use your email</button>
     </div>
     <p style="color:rgba(255,255,255,.7);font-size:11px;margin-top:26px;line-height:1.5">By continuing you agree to our Terms and Privacy Policy</p>
   </div>`);
 routes.signup.red=true;
 
-/* ---- Demo Google sign-up (looks like real OAuth; real flow needs a backend) ---- */
-function googleSignup(){go("google");}
-function appleSignup(){toast("Apple sign-in — demo");startOnboard();}
+/* ---- Real Firebase sign-in (Google + Email) ---- */
+async function googleSignup(){
+  if(!window.FF){ toast("Connecting… try again in a moment"); return; }
+  if(FF.demo){go("google");return;} // only if truly in demo build
+  try{
+    toast("Opening Google…");
+    const user=await FF.signIn("google");
+    await afterSignIn(user);
+  }catch(e){
+    console.error("Google sign-in error:",e);
+    toast((e&&e.code||"").includes("unauthorized-domain")?"Domain not authorized in Firebase":"Sign-in cancelled");
+  }
+}
+function appleSignup(){toast("Apple sign-in coming soon");}
+function facebookSignup(){toast("Facebook sign-in coming soon");}
+async function emailSignup(){ go("emailAuth"); }
+
+// After any successful sign-in: load profile → route by status
+async function afterSignIn(user){
+  if(user&&user.displayName)me.name=user.displayName.split(" ")[0];
+  try{
+    const prof=await FF.getProfile(user.uid);
+    if(prof){
+      Object.assign(me,prof);
+      applyTheme&&applyTheme();
+      if(prof.accountStatus==="approved"){state.tab="discover";go("app");setTimeout(askNotifications,600);return;}
+      if(prof.accountStatus==="pending"){go("verifyPending");return;}
+    }
+  }catch(e){ /* new user, no profile yet */ }
+  // new user → start onboarding
+  startOnboard();
+}
+
+// Email auth screen
+route("emailAuth",()=>`
+  <div class="scroll center red-bg" style="padding:44px 30px">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;width:100%;max-width:340px;margin:0 auto">
+      <img src="wordmark-white.png" alt="Yumble" style="height:36px;width:auto;margin:0 auto 24px;display:block">
+      <div class="field"><label style="color:#fff">Email</label><input id="au_email" type="email" placeholder="you@example.com"></div>
+      <div class="field"><label style="color:#fff">Password</label><input id="au_pw" type="password" placeholder="At least 6 characters"></div>
+      <button class="btn btn-white" style="margin-top:8px" onclick="doEmailAuth(true)">Create account</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="doEmailAuth(false)">I already have an account</button>
+      <button class="link" style="color:#fff;margin-top:16px" onclick="go('signup')">Back</button>
+    </div>
+  </div>`);
+routes.emailAuth.red=true;
+async function doEmailAuth(isNew){
+  const email=document.getElementById("au_email").value.trim();
+  const pw=document.getElementById("au_pw").value;
+  if(!email||pw.length<6){toast("Enter email and a 6+ char password");return;}
+  try{
+    toast(isNew?"Creating account…":"Signing in…");
+    const user=await FF.signInEmail(email,pw,isNew);
+    await afterSignIn(user);
+  }catch(e){
+    const msg=(e&&e.code||"").includes("email-already")?"That email already has an account — try signing in":
+      (e&&e.code||"").includes("wrong-password")?"Wrong password":
+      (e&&e.code||"").includes("user-not-found")?"No account yet — create one":"Couldn't sign in";
+    toast(msg);
+  }
+}
 route("google",()=>`
   <div class="scroll" style="background:#fff;padding:0">
     <div style="max-width:400px;margin:0 auto;padding:28px 24px">
@@ -868,6 +1048,14 @@ function submitVerification(){
   me.accountStatus="pending";
   go("onboard"); // shows submitting spinner
   state.step=OB_STEPS.indexOf("submitting");go("onboard");
+  // Persist the full profile to Firestore (real save)
+  if(window.FF&&!FF.demo&&FF.currentUid()){
+    FF.saveProfile({
+      name:me.name, age:me.age, gender:me.gender, lookingFor:me.lookingFor,
+      cuisines:me.cuisines, diets:me.diets, taste:me.taste, foodieType:me.foodieType,
+      agreedTerms:me.agreedTerms, accountStatus:"pending", createdAt:Date.now()
+    }).catch(e=>console.warn("profile save failed",e));
+  }
   setTimeout(()=>{go("verifyPending");},2200);
 }
 
@@ -1067,6 +1255,10 @@ function feedAction(id,action){
     if(item){item.classList.add(action==="super"?"fly-up":"fly-right");
       // heart burst
       const burst=document.createElement("div");burst.className="heart-burst";burst.textContent="♥";item.appendChild(burst);}
+    // Real save: record the like in Firestore (demo profiles use string ids)
+    if(window.FF&&!FF.demo&&FF.currentUid()){
+      FF.recordLike("demo_"+id).catch(e=>console.warn("like save",e));
+    }
     const sh=shared(me.cuisines,f.cuisines);
     if(sh.length>=2){if(!state.matches.find(m=>m.id===f.id))state.matches.unshift(f);setTimeout(()=>{showMatch(f);awardBadge("firstmatch");notify("It's a Match! 🎉",`You and ${f.name} both love ${sh.join(" & ")}. Say hello!`);},450);}
     else toast(action==="super"?"Super like sent ★":"Liked ♥");
@@ -1443,7 +1635,7 @@ route("book",({id})=>{
 function stepGuests(n){state.bookGuests=Math.max(1,Math.min(12,state.bookGuests+n));$("#gv").textContent=state.bookGuests;}
 function pickDate(i){state.bookDate=i;document.querySelectorAll("#dateSeg .datep").forEach((d,idx)=>d.classList.toggle("on",idx===i));}
 function pickSlot(s){state.bookSlot=s;document.querySelectorAll("#slotGrid .slot").forEach(el=>el.classList.toggle("on",el.textContent.startsWith(s)));}
-function confirmBooking(id){if(!state.bookSlot){toast("Pick a time first");return;}const v=VENUES.find(x=>x.id===id);state.myBookings.unshift({venueId:id,date:["Fri 8","Sat 9","Sun 10","Mon 11","Tue 12"][state.bookDate]+" Aug",time:state.bookSlot+" pm",guests:state.bookGuests,withName:null,when:"upcoming"});awardBadge("booker");notify("Table booked ✅",`${v.name} · ${state.bookGuests} guests at ${state.bookSlot} pm`);go("booked",{id});}
+function confirmBooking(id){if(!state.bookSlot){toast("Pick a time first");return;}const v=VENUES.find(x=>x.id===id);state.myBookings.unshift({venueId:id,date:["Fri 8","Sat 9","Sun 10","Mon 11","Tue 12"][state.bookDate]+" Aug",time:state.bookSlot+" pm",guests:state.bookGuests,withName:null,when:"upcoming"});awardBadge("booker");if(window.FF&&!FF.demo&&FF.currentUid()){FF.createBooking({venueId:String(id),venueName:v.name,date:["Fri 8","Sat 9","Sun 10","Mon 11","Tue 12"][state.bookDate]+" Aug",time:state.bookSlot+" pm",guests:state.bookGuests}).catch(e=>console.warn("booking save",e));}notify("Table booked ✅",`${v.name} · ${state.bookGuests} guests at ${state.bookSlot} pm`);go("booked",{id});}
 
 route("booked",({id})=>{
   const v=VENUES.find(x=>x.id===id);
@@ -1977,7 +2169,28 @@ route("about",()=>`
 routes.about.red=true;
 
 /* ---------- boot ---------- */
-// If a returning user's account is still cooking, take them straight there.
+// Real Firebase auth listener: when a signed-in user is detected on load,
+// pull their profile and route them. Falls back to welcome for signed-out.
+window.addEventListener("ff-ready",()=>{
+  const el=document.getElementById("ffStatus");
+  if(el){el.textContent="🟢 Live — real accounts on";el.style.color="rgba(255,255,255,.85)";}
+});
+setTimeout(()=>{const el=document.getElementById("ffStatus");if(el&&(!window.FF)){el.textContent="⚠️ Backend not connected — check console";}},4000);
+window.onFirebaseAuth = async function(user){
+  if(!user){ return; } // stay on welcome
+  try{
+    const prof = await FF.getProfile(user.uid);
+    if(prof){
+      Object.assign(me, prof);
+      if(user.displayName) me.name = prof.name || user.displayName.split(" ")[0];
+      applyTheme && applyTheme();
+      if(prof.accountStatus==="approved"){ state.tab="discover"; go("app"); setTimeout(askNotifications,600); return; }
+      if(prof.accountStatus==="pending"){ go("verifyPending"); return; }
+    }
+  }catch(e){ /* no profile yet */ }
+};
+
+// Initial route (demo/local): pending→cooking, approved→app, else welcome.
 if(me.accountStatus==="pending"){ go("verifyPending"); }
 else if(me.accountStatus==="approved"){ state.tab="discover"; go("app"); }
 else { go("welcome"); }
